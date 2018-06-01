@@ -41,6 +41,8 @@ def calibrate_football_fields(path_img, parameters):
     positions = []
     angles = []
     img = cv2.imread(path_img)
+    if img is None:
+        raise Exception("Calibration non trouvée : "+path_img)
 
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     cv2.imwrite('output/gray.jpg', gray)
@@ -102,6 +104,8 @@ def calibrate_football_fields(path_img, parameters):
 
 def crop_rotate_image(positions,angles,path_img):
     img = cv2.imread(path_img)
+    if img is None:
+        raise Exception("Crop non trouvé : "+path_img)
     crops = []
     for i in range(0,len(positions)):
         x0 = positions[i][0][0]
