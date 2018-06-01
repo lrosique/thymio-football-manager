@@ -18,9 +18,8 @@ import shutil
 from flask import Flask, jsonify
 app = Flask(__name__)
 
-path_img = 'data/image1.png'
 positions = None
-crops = []
+crops = None
 parameters_fields={
             "canny_min_threshold":250,
             "canny_max_threshold":400,
@@ -38,7 +37,7 @@ def get_image(name,url):
             r.raw.decode_content = True
             shutil.copyfileobj(r.raw, f) 
 
-def calibrateFootballField(path_img, parameters):
+def calibrate_football_fields(path_img, parameters):
     positions = []
     angles = []
     img = cv2.imread(path_img)
@@ -127,24 +126,24 @@ def crop_rotate_image(positions,angles,path_img):
     return crops
 
 @app.route('/calibration/football_field', methods=['GET', 'POST'])
-def calibrate_center_football_field():
+def get_calibrate_football_fields():
     global positions,parameters_fields,crops
     path_img = "data/calibration.png"
     get_image(path_img,"http://192.168.1.60:1880/calibration")
-    positions,angles = calibrateFootballField(path_img,parameters_fields)
+    positions,angles = calibrate_football_fields(path_img,parameters_fields)
     crops = crop_rotate_image(positions,angles,path_img)
     return jsonify(positions=positions, crops=crops)    
 
 @app.route('/calibration/image', methods=['GET', 'POST'])
-def calibrate_image():
+def get_calibrate_image():
     global positions,parameters_fields,crops
     path_img = "data/image.png"
     get_image(path_img,"http://192.168.1.60:1880/image")
-    #positions,angles = calibrateFootballField(path_img,parameters_fields)
-    #crops = crop_rotate_image(positions,angles,path_img)
+    positions,angles = calibrate_football_fields(path_img,parameters_fields)
+    crops = crop_rotate_image(positions,angles,path_img)
     return jsonify(positions=positions, crops=crops) 
 
 @app.route('/football_field', methods=['GET', 'POST'])
-def get_center_football_field():
-    global center_football_field,crops
+def get_football_fields():
+    global positions,crops
     return jsonify(positions=positions,crops=crops)
