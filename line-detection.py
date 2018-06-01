@@ -31,10 +31,10 @@ parameters_fields={
             "number_pixels_per_field":50000
             }
 
-def get_image_calibration():
-    r = requests.get("http://192.168.1.60:1880/calibration", stream=True)
+def get_image(name,url):
+    r = requests.get(url, stream=True)
     if r.status_code == 200:
-        with open("data/calibration.png", 'wb') as f:
+        with open(name, 'wb') as f:
             r.raw.decode_content = True
             shutil.copyfileobj(r.raw, f) 
 
@@ -129,11 +129,20 @@ def crop_rotate_image(positions,angles,path_img):
 @app.route('/calibration/football_field', methods=['GET', 'POST'])
 def calibrate_center_football_field():
     global positions,parameters_fields,crops
-    get_image_calibration()
     path_img = "data/calibration.png"
+    get_image(path_img,"http://192.168.1.60:1880/calibration")
     positions,angles = calibrateFootballField(path_img,parameters_fields)
     crops = crop_rotate_image(positions,angles,path_img)
     return jsonify(positions=positions, crops=crops)    
+
+@app.route('/calibration/image', methods=['GET', 'POST'])
+def calibrate_image():
+    global positions,parameters_fields,crops
+    path_img = "data/image.png"
+    get_image(path_img,"http://192.168.1.60:1880/image")
+    #positions,angles = calibrateFootballField(path_img,parameters_fields)
+    #crops = crop_rotate_image(positions,angles,path_img)
+    return jsonify(positions=positions, crops=crops) 
 
 @app.route('/football_field', methods=['GET', 'POST'])
 def get_center_football_field():
