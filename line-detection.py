@@ -20,6 +20,7 @@ app = Flask(__name__)
 
 positions = None
 crops = None
+angles = None
 parameters_fields={
             "canny_min_threshold":250,
             "canny_max_threshold":400,
@@ -131,7 +132,7 @@ def crop_rotate_image(positions,angles,path_img):
 
 @app.route('/calibration/football_field', methods=['GET', 'POST'])
 def get_calibrate_football_fields():
-    global positions,parameters_fields,crops
+    global positions,parameters_fields,crops,angles
     path_img = "data/calibration.png"
     get_image(path_img,"http://192.168.1.60:1880/calibration")
     positions,angles = calibrate_football_fields(path_img,parameters_fields)
@@ -140,10 +141,9 @@ def get_calibrate_football_fields():
 
 @app.route('/calibration/image', methods=['GET', 'POST'])
 def get_calibrate_image():
-    global positions,parameters_fields,crops
+    global positions,parameters_fields,crops,angles
     path_img = "data/image.png"
     get_image(path_img,"http://192.168.1.60:1880/image")
-    positions,angles = calibrate_football_fields(path_img,parameters_fields)
     crops = crop_rotate_image(positions,angles,path_img)
     return jsonify(positions=positions, crops=crops) 
 
