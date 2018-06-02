@@ -21,8 +21,9 @@ app = Flask(__name__)
 
 if not os.path.exists("data"):
     os.makedirs("data")
-if not os.path.exists("output"):
-    os.makedirs("output")
+if os.path.exists("output"):
+    shutil.rmtree('output')
+os.makedirs("output")
 
 positions = None
 crops = None
@@ -30,9 +31,15 @@ angles = None
 
 hsv_green={"low":(30, 50, 0),"high":(80, 255,255)}
 hsv_orange={"low":(5, 80, 100),"high":(28, 255,255)}
+
 parameters_fields_hd={"canny_min_threshold":250, "canny_max_threshold":400, "threshold_min":200, "threshold_max":255, "erode_iter":5, "dilate_iter":10, "number_pixels_per_field":50000 }
 parameters_fields_ld={"canny_min_threshold":150, "canny_max_threshold":300, "threshold_min":150, "threshold_max":255, "erode_iter":2, "dilate_iter":4, "number_pixels_per_field":5000 }
-parameters_image_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":2}
+
+parameters_thymio_hd={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":1000, "min_radius":7}
+parameters_thymio_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":100, "min_radius":7}
+
+parameters_dots_hd={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":200}
+parameters_dots_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":2}
 #parameters_image_ld={"canny_min_threshold":150, "canny_max_threshold":300, "threshold_min":150, "threshold_max":255, "erode_iter":2, "dilate_iter":4, "number_pixels_per_field":5000 }
 
 def get_image(name,url):
@@ -204,21 +211,25 @@ def find_thymios(path_img, path_thresh, parameters, name, path_folder):
     if cnts != None and len(cnts) > 0:
         cnts = contours.sort_contours(cnts)[0]
         # loop over the contours
+        cpt = 0
         for (i, c) in enumerate(cnts):
             ((cX, cY), radius) = cv2.minEnclosingCircle(c)
-            rect = cv2.minAreaRect(c)
-            box = cv2.boxPoints(rect)
-            box = np.int0(box)
-            cv2.drawContours(rectangles,[box],0,(0,0,255),2)
-            #cv2.putText(img,name+' '+str(i), (max(0,int(cX)-50),int(cY)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-            
-            mask = np.zeros(src.shape[:2],np.uint8)
-            cv2.drawContours(mask, [c],-1, 255, -1)
-            dst = cv2.bitwise_and(src, src, mask=mask)
-            cv2.imwrite(path_folder+"/"+name+"_thymio_"+str(i)+".png", dst)
-            
-            centers.append([int(cX),int(cY)])
-            angles.append(rect[2])
+            #print("radius "+str(i)+" : "+str(radius))
+            if radius >= parameters["min_radius"]:
+                rect = cv2.minAreaRect(c)
+                box = cv2.boxPoints(rect)
+                box = np.int0(box)
+                cv2.drawContours(rectangles,[box],0,(0,0,255),2)
+                #cv2.putText(img,name+' '+str(i), (max(0,int(cX)-50),int(cY)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                
+                mask = np.zeros(src.shape[:2],np.uint8)
+                cv2.drawContours(mask, [c],-1, 255, -1)
+                dst = cv2.bitwise_and(src, src, mask=mask)
+                cv2.imwrite(path_folder+"/"+name+"_thymio_"+str(cpt)+".png", dst)
+                
+                centers.append([int(cX),int(cY)])
+                angles.append(rect[2])
+                cpt += 1
 
     #find_x_y_rectangle(positions[0])
     cv2.imwrite(path_folder+'/rectangles_team_'+name+'.png', rectangles)
@@ -252,6 +263,8 @@ def get_football_fields():
 
 
 
+
+
 # CALIBRATION
 path_img = "data/calibration_ld.png"
 positions,angles = calibrate_football_fields(path_img,parameters_fields_ld)
@@ -270,47 +283,52 @@ path_img = path_folder+"/field_"+str(i)+".png"
 filter_by_team(path_img,hsv_green,path_folder+"/team_green.png")
 filter_by_team(path_img,hsv_orange,path_folder+"/team_orange.png")
 
-centers_green=find_thymios(path_folder+"/team_green.png",path_folder+"/thresh_team_green.png",parameters_image_ld,"green",path_folder)
-centers_orange=find_thymios(path_folder+"/team_orange.png",path_folder+"/thresh_team_orange.png",parameters_image_ld,"orange",path_folder)
+centers_green=find_thymios(path_folder+"/team_green.png",path_folder+"/thresh_team_green.png",parameters_thymio_ld,"green",path_folder)
+centers_orange=find_thymios(path_folder+"/team_orange.png",path_folder+"/thresh_team_orange.png",parameters_thymio_ld,"orange",path_folder)
 
 j = 0
-numero_thymio_green = len(count_dots_thymio(path_folder+"/green_thymio_"+str(j)+".png",parameters_image_ld,"green",path_folder,str(j)))
-numero_thymio_orange = len(count_dots_thymio(path_folder+"/orange_thymio_"+str(j)+".png",parameters_image_ld,"orange",path_folder,str(j)))
+numero_thymio_green = len(count_dots_thymio(path_folder+"/green_thymio_"+str(j)+".png",parameters_dots_ld,"green",path_folder,str(j)))
+numero_thymio_orange = len(count_dots_thymio(path_folder+"/orange_thymio_"+str(j)+".png",parameters_dots_ld,"orange",path_folder,str(j)))
 
 
 
 # FILTER TEAM
 total_results = []
+print("### RESULTS ###")
 for i in range(len(crops)):
+    print("")
+    print("# Field "+str(i)+" :")
     field = {"number":i}   
     path_folder = "output/field_"+str(i)
     path_img = path_folder+"/field_"+str(i)+".png"
     filter_by_team(path_img,hsv_green,path_folder+"/team_green.png")
     filter_by_team(path_img,hsv_orange,path_folder+"/team_orange.png")
 
-    centers_green=find_thymios(path_folder+"/team_green.png",path_folder+"/thresh_team_green.png",parameters_image_ld,"green",path_folder)
-    centers_orange=find_thymios(path_folder+"/team_orange.png",path_folder+"/thresh_team_orange.png",parameters_image_ld,"orange",path_folder)
+    centers_green=find_thymios(path_folder+"/team_green.png",path_folder+"/thresh_team_green.png",parameters_thymio_ld,"green",path_folder)
+    centers_orange=find_thymios(path_folder+"/team_orange.png",path_folder+"/thresh_team_orange.png",parameters_thymio_ld,"orange",path_folder)
 
     greens = []
     oranges = []
+    print("** Team GREEN  : "+str(len(centers_green))+" detected")
     for j in range(len(centers_green)):
         center_position = centers_green[j]
-        numero = len(count_dots_thymio(path_folder+"/green_thymio_"+str(j)+".png",parameters_image_ld,"green",path_folder,str(j)))
+        numero = len(count_dots_thymio(path_folder+"/green_thymio_"+str(j)+".png",parameters_dots_ld,"green",path_folder,str(j)))
         greens.append((numero,center_position))
+        print("    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")")
     
+    print("** Team ORANGE : "+str(len(centers_orange))+" detected")
     for j in range(len(centers_orange)):
         center_position = centers_orange[j]
-        numero = len(count_dots_thymio(path_folder+"/orange_thymio_"+str(j)+".png",parameters_image_ld,"orange",path_folder,str(j)))
+        numero = len(count_dots_thymio(path_folder+"/orange_thymio_"+str(j)+".png",parameters_dots_ld,"orange",path_folder,str(j)))
         oranges.append((numero,center_position))
+        print("    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")")
     
     field["team_green"]=greens
     field["team_orange"]=oranges
     total_results.append(field)
 
-print(total_results)
 
 
-# Méthode TEST CONFIGURATION (avec des assert par rapport à ce qu'on a placé)
 # Revoir pour que ça détecte correctement...
 # Revoir pour générer beaucoup moins d'images
 # Simplifier le code !
