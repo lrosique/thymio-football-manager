@@ -5,6 +5,74 @@ Created on Fri Jun  1 18:54:11 2018
 @author: soldier
 """
 
+import requests, json
+
+g = requests.get("http://127.0.0.1:5000/calibration/football_field")
+g_json = json.loads(g.text)
+
+g = requests.get("http://127.0.0.1:5000/calibration/image")
+g_json = json.loads(g.text)
+
+g = requests.get("http://127.0.0.1:5000/football_field?numero=1")
+g_json = json.loads(g.text)
+
+
+# CALIBRATION
+path_img = "data/calibration_ld.png"
+positions,angles = du.calibrate_football_fields(path_img,parameters_fields_ld)
+crops = du.crop_rotate_image(positions,angles,path_img)
+
+# GET IMAGE
+path_img = "data/image_ld.png"
+crops = du.crop_rotate_image(positions,angles,path_img,save_img=True)
+
+
+# TEST 1 FIELD
+i = 1
+path_folder = "output/field_"+str(i)
+path_img = path_folder+"/field_"+str(i)+".png"
+
+du.filter_by_team(path_img,hsv_green,path_folder+"/team_green.png")
+du.filter_by_team(path_img,hsv_orange,path_folder+"/team_orange.png")
+
+centers_green=du.find_thymios(path_folder+"/team_green.png",path_folder+"/thresh_team_green.png",parameters_thymio_ld,"green",path_folder)
+centers_orange=du.find_thymios(path_folder+"/team_orange.png",path_folder+"/thresh_team_orange.png",parameters_thymio_ld,"orange",path_folder)
+
+j = 0
+numero_thymio_green = len(du.count_dots_thymio(path_folder+"/green_thymio_"+str(j)+".png",parameters_dots_ld,"green",path_folder,str(j)))
+numero_thymio_orange = len(du.count_dots_thymio(path_folder+"/orange_thymio_"+str(j)+".png",parameters_dots_ld,"orange",path_folder,str(j)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Read
 hsv_green={"low":(30, 50, 0),"high":(80, 255,255)}
 hsv_orange={"low":(5, 80, 100),"high":(28, 255,255)}
