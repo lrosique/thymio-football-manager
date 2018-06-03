@@ -8,6 +8,7 @@ import json
 import time
 import redis
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
+#r = redis.StrictRedis(host='54.37.10.254', port=6379, db=0)
 
 if not os.path.exists("data"):
     os.makedirs("data")

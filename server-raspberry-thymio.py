@@ -7,20 +7,11 @@ import numpy as np
 import json
 import redis
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
+#r = redis.StrictRedis(host='54.37.10.254', port=6379, db=0)
 r.set('start',False)
 
 from flask import Flask, request
 app = Flask(__name__)
-
-if not os.path.exists("data"):
-    os.makedirs("data")
-if os.path.exists("output"):
-    shutil.rmtree('output')
-os.makedirs("output")
-if os.path.exists("data/image.png"):
-    os.remove("data/image.png")
-if os.path.exists("data/calibration.png"):
-    os.remove("data/calibration.png")
 
 positions = None
 crops = None
@@ -81,3 +72,7 @@ def start_loop_detection():
 def stop_loop_detection():
     r.set('start','0')
     return 'STOP'
+    
+#if __name__ == '__main__':
+#    app.debug = False
+#    app.run(host = '0.0.0.0',port=5005)
