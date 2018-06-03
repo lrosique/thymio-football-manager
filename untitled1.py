@@ -13,6 +13,10 @@ g_json = json.loads(g.text)
 g = requests.get("http://127.0.0.1:5000/calibration/image")
 g_json = json.loads(g.text)
 
+
+g = requests.get("http://127.0.0.1:5000/start")
+g_json = json.loads(g.text)
+
 g = requests.get("http://127.0.0.1:5000/football_field?numero=1")
 g_json = json.loads(g.text)
 
