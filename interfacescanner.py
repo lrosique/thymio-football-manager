@@ -27,6 +27,3 @@ def get_detections(summary=False):
     results = pickle.loads(r.get("results"))
     if summary: return total_results, results
     else: return total_results
-    
-    
-total_results[1]["team_green"]
