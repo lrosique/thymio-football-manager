@@ -6,7 +6,7 @@ import os
 import numpy as np
 import json
 import redis
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
+r = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
 #r = redis.StrictRedis(host='54.37.10.254', port=6379, db=0)
 r.set('start',False)
 
