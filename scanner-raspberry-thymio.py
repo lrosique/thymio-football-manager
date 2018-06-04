@@ -41,21 +41,21 @@ def download_image(name):
     return path_img
 
 def get_calibrate_football_fields():
-    global positions,parameters_fields,crops,angles
+    global positions,crops,angles
     path_img = download_image('calibration')
     positions,angles = du.calibrate_football_fields(path_img,p.parameters_fields_ld)
     crops = du.crop_rotate_image(positions,angles,path_img)
     return crops
 
 def get_calibrate_image():
-    global positions,parameters_fields,crops,angles
+    global positions,crops,angles
     path_img = download_image("image")
     crops = du.crop_rotate_image(positions,angles,path_img,save_img=True)
     return crops
 
 def get_football_field():
-    global total_results,results,angles,positions,hsv_green,hsv_orange,parameters_thymio_ld,parameters_dots_ld
-    total_results, positions,angles, results = du.analyse_all_fields(angles,positions,p.hsv_green,p.hsv_orange,p.parameters_thymio_ld,p.parameters_dots_ld)
+    global total_results,results,angles,positions
+    total_results, positions,angles, results = du.analyse_all_fields(angles,positions,p.hsv_green,p.hsv_rose,p.hsv_blue,p.parameters_thymio_ld,p.parameters_dots_ld)
     return total_results,results
 
 print("Scanner loaded... and loop started.")

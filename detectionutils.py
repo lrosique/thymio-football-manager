@@ -16,6 +16,15 @@ import requests
 import shutil
 import os
 
+
+def convert_rgb_to_hsv(r,g,b, delta=5):
+    target_color = np.uint8([[[b, g, r]]])
+    target_color_hsv = cv2.cvtColor(target_color, cv2.COLOR_BGR2HSV)
+    target_color_h = target_color_hsv[0,0,0]
+    lower_hsv = np.array([max(0, target_color_h - delta), 10, 10])
+    upper_hsv = np.array([min(179, target_color_h + delta), 250, 250])
+    return target_color_h, lower_hsv, upper_hsv
+
 def get_image(name,url):
     r = requests.get(url, stream=True)
     if r.status_code == 200:
@@ -55,8 +64,7 @@ def calibrate_football_fields(path_img, parameters, save_img=False):
         if label == 0:
             continue
 
-        # otherwise, construct the label mask and count the
-        # number of pixels
+        # otherwise, construct the label mask and count the number of pixels
         labelMask = np.zeros(thresh.shape, dtype="uint8")
         labelMask[labels == label] = 255
         numPixels = cv2.countNonZero(labelMask)
@@ -66,8 +74,7 @@ def calibrate_football_fields(path_img, parameters, save_img=False):
         if numPixels > parameters["number_pixels_per_field"]:
             mask = cv2.add(mask, labelMask)
 
-    # find the contours in the mask, then sort them from left to
-    # right
+    # find the contours in the mask, then sort them from left to right
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
     cnts = contours.sort_contours(cnts)[0]
@@ -209,7 +216,7 @@ def find_thymios(path_img, path_thresh, parameters,angles, name, path_folder):
     cv2.imwrite(path_folder+'/rectangles_team_'+name+'.png', rectangles)
     return centers
 
-def analyse_all_fields(angles,positions,hsv_green,hsv_orange,parameters_thymio_ld,parameters_dots_ld):
+def analyse_all_fields(angles,positions,hsv_green,hsv_rose,hsv_blue,parameters_thymio_ld,parameters_dots_ld):
     total_results = []
     # Generate image
     path_img = "data/image.png"
@@ -221,13 +228,16 @@ def analyse_all_fields(angles,positions,hsv_green,hsv_orange,parameters_thymio_l
         path_folder = "output/field_"+str(i)
         path_img = path_folder+"/field_"+str(i)+".png"
         filter_by_team(path_img,hsv_green,path_folder+"/team_green.png")
-        filter_by_team(path_img,hsv_orange,path_folder+"/team_orange.png")
+        filter_by_team(path_img,hsv_rose,path_folder+"/team_rose.png")
+        filter_by_team(path_img,hsv_blue,path_folder+"/team_blue.png")
     
         centers_green=find_thymios(path_folder+"/team_green.png",path_folder+"/thresh_team_green.png",parameters_thymio_ld,angles,"green",path_folder)
-        centers_orange=find_thymios(path_folder+"/team_orange.png",path_folder+"/thresh_team_orange.png",parameters_thymio_ld,angles,"orange",path_folder)
+        centers_rose=find_thymios(path_folder+"/team_rose.png",path_folder+"/thresh_team_rose.png",parameters_thymio_ld,angles,"rose",path_folder)
+        centers_blue=find_thymios(path_folder+"/team_blue.png",path_folder+"/thresh_team_blue.png",parameters_thymio_ld,angles,"blue",path_folder)
     
         greens = []
-        oranges = []
+        roses = []
+        blues = []
         results += "** Team GREEN  : "+str(len(centers_green))+" detected\r\n"
         for j in range(len(centers_green)):
             center_position = centers_green[j]
@@ -235,14 +245,22 @@ def analyse_all_fields(angles,positions,hsv_green,hsv_orange,parameters_thymio_l
             greens.append((numero,center_position))
             results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
         
-        results+="** Team ORANGE : "+str(len(centers_orange))+" detected\r\n"
-        for j in range(len(centers_orange)):
-            center_position = centers_orange[j]
-            numero = len(count_dots_thymio(path_folder+"/orange_thymio_"+str(j)+".png",parameters_dots_ld,"orange",path_folder,str(j)))
-            oranges.append((numero,center_position))
+        results+="** Team ROSE : "+str(len(centers_rose))+" detected\r\n"
+        for j in range(len(centers_rose)):
+            center_position = centers_rose[j]
+            numero = len(count_dots_thymio(path_folder+"/rose_thymio_"+str(j)+".png",parameters_dots_ld,"rose",path_folder,str(j)))
+            roses.append((numero,center_position))
+            results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
+        
+        results+="** Team BLUE : "+str(len(centers_blue))+" detected\r\n"
+        for j in range(len(centers_blue)):
+            center_position = centers_blue[j]
+            numero = len(count_dots_thymio(path_folder+"/blue_thymio_"+str(j)+".png",parameters_dots_ld,"blue",path_folder,str(j)))
+            blues.append((numero,center_position))
             results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
         
         field["team_green"]=greens
-        field["team_orange"]=oranges
+        field["team_rose"]=roses
+        field["team_blue"]=blues
         total_results.append(field)
     return total_results, positions,angles, results
