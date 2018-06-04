@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import redis
+import time
 import pickle
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
@@ -19,7 +20,9 @@ def stop():
     
 def full_start_server():
     calibrate_fields(reset='1')
+    time.sleep(2)
     calibrate_image(reset='1')
+    time.sleep(2)
     start()
 
 def get_detections(summary=False):
