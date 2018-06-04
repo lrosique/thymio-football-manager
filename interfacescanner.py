@@ -18,8 +18,8 @@ def stop():
     r.set('start','0')
     
 def full_start_server():
-    calibrate_fields(reset='0')
-    calibrate_image(reset='0')
+    calibrate_fields(reset='1')
+    calibrate_image(reset='1')
     start()
 
 def get_detections(summary=False):
@@ -27,3 +27,6 @@ def get_detections(summary=False):
     results = pickle.loads(r.get("results"))
     if summary: return total_results, results
     else: return total_results
+    
+    
+total_results[1]["team_green"]

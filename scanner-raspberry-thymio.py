@@ -32,7 +32,7 @@ total_results = None
 results = None
 
 def download_image(name):
-    reset = r.get("reset")
+    reset = r.get("reset").decode("utf-8")
     path_img = 'data/'+name+'.png'
     if reset == '1':
         du.get_image(path_img,"http://192.168.1.60:1880/"+name)
