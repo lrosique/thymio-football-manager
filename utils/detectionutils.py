@@ -16,6 +16,27 @@ import requests
 import shutil
 import os
 
+def create_folder(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+def delete_content_folder(folder):
+    if os.path.exists(folder):
+        for the_file in os.listdir(folder):
+            file_path = os.path.join(folder, the_file)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path): shutil.rmtree(file_path)
+            except Exception as e:
+                print(e)
+    else:
+        os.makedirs(folder)
+    return True
+        
+def delete_file(path):
+    if os.path.exists(path):
+        os.remove(path)
 
 def convert_rgb_to_hsv(r,g,b, delta=5):
     target_color = np.uint8([[[b, g, r]]])
@@ -92,7 +113,7 @@ def calibrate_football_fields(path_img, parameters, save_img=False):
         positions.append(box)
         angles.append(rect[2])
 
-    cv2.imwrite('output/rectangles.png', rectangles)
+    cv2.imwrite('output/field_detection.png', rectangles)
     return positions,angles
 
 def find_x_y_rectangle(box):
@@ -118,7 +139,7 @@ def crop_rotate_image(positions,angles,path_img,save_img=False):
             cv2.imwrite('output/field_'+str(i)+'/field_'+str(i)+'.png', rotate_img)
     return crops
 
-def filter_by_team(path_img,parameters_hsv,name):
+def filter_by_team(path_img,parameters_hsv,name,save_img=False):
     img = cv2.imread(path_img)
     if img is None:
         raise Exception("Filter_team non trouvé : "+path_img)
@@ -131,15 +152,16 @@ def filter_by_team(path_img,parameters_hsv,name):
     img_team = np.zeros_like(img, np.uint8)
     img_team[imask] = img[imask]
     ## save 
+    #if save_img: 
     cv2.imwrite(name, img_team)
     
-def count_dots_thymio(path_img, parameters, name, path_folder, number):
+def count_dots_thymio(path_img, parameters, name, path_folder, number,save_img=False):
     gray = cv2.imread(path_img, 0)
     if gray is None:
         raise Exception("Count_dots non trouvé : "+path_img)
     ## threshold
     th =255- cv2.threshold(gray, parameters['threshold_min'], parameters['threshold_max'],cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)[1]
-    cv2.imwrite(path_folder+"/"+name+"_thymio_"+number+".png", th)
+    if save_img: cv2.imwrite(path_folder+"/"+name+"_thymio_"+number+".png", th)
     ## findcontours
     _,cnts,_ = cv2.findContours(th, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     ## filter by area
@@ -151,7 +173,7 @@ def count_dots_thymio(path_img, parameters, name, path_folder, number):
             xcnts.append(cnt)
     return xcnts
 
-def find_thymios(path_img, path_thresh, parameters,angles, name, path_folder):
+def find_thymios(path_img, path_thresh, parameters,angles, name, path_folder,save_img=False):
     img=cv2.imread(path_img)
     src=img.copy()
     if img is None:
@@ -159,9 +181,10 @@ def find_thymios(path_img, path_thresh, parameters,angles, name, path_folder):
     
     gray = cv2.imread(path_img, 0)
     th =255- cv2.threshold(gray, parameters['threshold_min'], parameters['threshold_max'],cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)[1]
-    cv2.imwrite(path_thresh, th)
+    if save_img: cv2.imwrite(path_thresh, th)
     
-    thresh = 255-cv2.imread(path_thresh,0)
+    #thresh = 255-cv2.imread(path_thresh,0)
+    thresh = 255-th#cv2.cvtColor(th,cv2.COLOR_BGR2GRAY)
     labels = measure.label(thresh, neighbors=8, background=0)
     mask = np.zeros(thresh.shape, dtype="uint8")
 
@@ -206,17 +229,18 @@ def find_thymios(path_img, path_thresh, parameters,angles, name, path_folder):
                 mask = np.zeros(src.shape[:2],np.uint8)
                 cv2.drawContours(mask, [c],-1, 255, -1)
                 dst = cv2.bitwise_and(src, src, mask=mask)
-                cv2.imwrite(path_folder+"/"+name+"_thymio_"+str(cpt)+".png", dst)
+                #if save_img: 
+                cv2.imwrite(path_folder+"/details/"+name+"_thymio_"+str(cpt)+".png", dst)
                 
                 centers.append([int(cX),int(cY)])
                 #angles.append(rect[2])
                 cpt += 1
 
     #find_x_y_rectangle(positions[0])
-    cv2.imwrite(path_folder+'/rectangles_team_'+name+'.png', rectangles)
+    cv2.imwrite(path_folder+'/detections_team_'+name+'.png', rectangles)
     return centers
 
-def analyse_all_fields(angles,positions,hsv_green,hsv_rose,hsv_blue,parameters_thymio_ld,parameters_dots_ld):
+def analyse_all_fields(angles,positions,hsv_green,hsv_rose,hsv_blue,parameters_thymio_ld,parameters_dots_ld,save_img=False):
     total_results = []
     # Generate image
     path_img = "data/image.png"
@@ -227,13 +251,15 @@ def analyse_all_fields(angles,positions,hsv_green,hsv_rose,hsv_blue,parameters_t
         field = {"number":i}   
         path_folder = "output/field_"+str(i)
         path_img = path_folder+"/field_"+str(i)+".png"
-        filter_by_team(path_img,hsv_green,path_folder+"/team_green.png")
-        filter_by_team(path_img,hsv_rose,path_folder+"/team_rose.png")
-        filter_by_team(path_img,hsv_blue,path_folder+"/team_blue.png")
+        create_folder(path_folder+"/teams")
+        create_folder(path_folder+"/details")
+        filter_by_team(path_img,hsv_green,path_folder+"/teams/team_green.png",save_img)
+        filter_by_team(path_img,hsv_rose,path_folder+"/teams/team_rose.png",save_img)
+        filter_by_team(path_img,hsv_blue,path_folder+"/teams/team_blue.png",save_img)
     
-        centers_green=find_thymios(path_folder+"/team_green.png",path_folder+"/thresh_team_green.png",parameters_thymio_ld,angles,"green",path_folder)
-        centers_rose=find_thymios(path_folder+"/team_rose.png",path_folder+"/thresh_team_rose.png",parameters_thymio_ld,angles,"rose",path_folder)
-        centers_blue=find_thymios(path_folder+"/team_blue.png",path_folder+"/thresh_team_blue.png",parameters_thymio_ld,angles,"blue",path_folder)
+        centers_green=find_thymios(path_folder+"/teams/team_green.png",path_folder+"/thresh_team_green.png",parameters_thymio_ld,angles,"green",path_folder,save_img)
+        centers_rose=find_thymios(path_folder+"/teams/team_rose.png",path_folder+"/thresh_team_rose.png",parameters_thymio_ld,angles,"rose",path_folder,save_img)
+        centers_blue=find_thymios(path_folder+"/teams/team_blue.png",path_folder+"/thresh_team_blue.png",parameters_thymio_ld,angles,"blue",path_folder,save_img)
     
         greens = []
         roses = []
@@ -241,21 +267,21 @@ def analyse_all_fields(angles,positions,hsv_green,hsv_rose,hsv_blue,parameters_t
         results += "** Team GREEN  : "+str(len(centers_green))+" detected\r\n"
         for j in range(len(centers_green)):
             center_position = centers_green[j]
-            numero = len(count_dots_thymio(path_folder+"/green_thymio_"+str(j)+".png",parameters_dots_ld,"green",path_folder,str(j)))
+            numero = len(count_dots_thymio(path_folder+"/details/green_thymio_"+str(j)+".png",parameters_dots_ld,"green",path_folder,str(j),save_img))
             greens.append((numero,center_position))
             results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
         
         results+="** Team ROSE : "+str(len(centers_rose))+" detected\r\n"
         for j in range(len(centers_rose)):
             center_position = centers_rose[j]
-            numero = len(count_dots_thymio(path_folder+"/rose_thymio_"+str(j)+".png",parameters_dots_ld,"rose",path_folder,str(j)))
+            numero = len(count_dots_thymio(path_folder+"/details/rose_thymio_"+str(j)+".png",parameters_dots_ld,"rose",path_folder,str(j),save_img))
             roses.append((numero,center_position))
             results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
         
         results+="** Team BLUE : "+str(len(centers_blue))+" detected\r\n"
         for j in range(len(centers_blue)):
             center_position = centers_blue[j]
-            numero = len(count_dots_thymio(path_folder+"/blue_thymio_"+str(j)+".png",parameters_dots_ld,"blue",path_folder,str(j)))
+            numero = len(count_dots_thymio(path_folder+"/details/blue_thymio_"+str(j)+".png",parameters_dots_ld,"blue",path_folder,str(j),save_img))
             blues.append((numero,center_position))
             results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
         
