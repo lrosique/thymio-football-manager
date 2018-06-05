@@ -1,26 +1,21 @@
 # -*- coding: utf-8 -*-
-import detectionutils as du
-import detectionparameters as p
+import utils.detectionutils as du
+import utils.detectionparameters as p
 import shutil
-import os
 import redis
 import pickle
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
-if not os.path.exists("data"):
-    os.makedirs("data")
-if os.path.exists("output"):
-    shutil.rmtree('output')
-os.makedirs("output")
-if os.path.exists("data/image.png"):
-    os.remove("data/image.png")
-if os.path.exists("data/calibration.png"):
-    os.remove("data/calibration.png")
+du.create_folder("data")
+du.delete_content_folder("output")
+du.delete_file("data/image.png")
+du.delete_file("data/calibration.png")
 
 r.set("start",'0')
 r.set("calibrate_fields",'0')
 r.set("calibrate_image",'0')
 r.set("reset",'0')
+r.set("save_img",'0')
 r.set("crops",pickle.dumps(None))
 r.set("total_results",pickle.dumps(None))
 r.set("results",pickle.dumps(None))
@@ -37,7 +32,7 @@ def download_image(name):
     if reset == '1':
         du.get_image(path_img,"http://192.168.1.60:1880/"+name)
     else:
-        shutil.copyfile("data/"+name+"_ld.png",path_img)
+        shutil.copyfile("data/train/"+name+"_ld.png",path_img)
     return path_img
 
 def get_calibrate_football_fields():
@@ -55,7 +50,10 @@ def get_calibrate_image():
 
 def get_football_field():
     global total_results,results,angles,positions
-    total_results, positions,angles, results = du.analyse_all_fields(angles,positions,p.hsv_green,p.hsv_rose,p.hsv_blue,p.parameters_thymio_ld,p.parameters_dots_ld)
+    save_img = r.get("save_img").decode("utf-8")
+    if save_img == "1": save_img = True
+    else: save_img = False
+    total_results, positions,angles, results = du.analyse_all_fields(angles,positions,p.hsv_green,p.hsv_rose,p.hsv_blue,p.parameters_thymio_ld,p.parameters_dots_ld,save_img)
     return total_results,results
 
 print("Scanner loaded... and loop started.")
