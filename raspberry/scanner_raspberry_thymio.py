@@ -28,20 +28,21 @@ angles = None
 total_results = None
 results = None
 
+crops_img = None
+
 def get_calibrate_football_fields(image):
     global positions,crops,angles
     positions,angles = du.calibrate_football_fields(image,p.parameters_fields_ld)
     crops = du.crop_rotate_image(positions,angles,image)
     return crops
 
-def get_calibrate_image():
-    global positions,crops,angles
-    #path_img = download_image("image")
-    #crops = du.crop_rotate_image(positions,angles,path_img,save_img=True)
-    return crops
+def get_calibrate_image(image):
+    global positions,crops,crops_img,angles
+    crops, crops_img = du.crop_rotate_image(positions,angles,image)
+    return crops, crops_img
 
 def get_football_field():
-    global total_results,results,angles,positions
+    global total_results,results,angles,positions,crops_img
     #save_img = r.get("save_img").decode("utf-8")
     #if save_img == "1": save_img = True
     #else: save_img = False
@@ -63,7 +64,7 @@ def print_start_stop(prev_start, start):
             print("Server stopped !")
     
 def loop_camera_redis():
-    global positions,crops,angles,total_results,results
+    global positions,crops,angles,total_results,results,crops_img
     start = r.get("start")
     camera, rawCapture = init_camera()
     
@@ -90,15 +91,15 @@ def loop_camera_redis():
         # IMAGE CALIBRATION
         if calibrate_image != None and calibrate_image.decode("utf-8") == '1':
             print("Début de calibration de l'image")
-            get_calibrate_image()
+            get_calibrate_image(image)
             r.set('crops',pickle.dumps(crops))
             r.set("calibrate_image",'0')
             print("Calibration de l'image terminée")
         
         # REAL TIME DETECTION
         if start != None and start.decode("utf-8") == '1':
-            get_calibrate_image()
-            get_football_field()
+            get_calibrate_image(image)
+            get_football_field(image)
             r.set('total_results',pickle.dumps(total_results))
             r.set('results',pickle.dumps(results))
             

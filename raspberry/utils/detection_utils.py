@@ -124,6 +124,7 @@ def crop_rotate_image(positions,angles,img,save_img=False):
     if img is None:
         raise Exception("[Error] crop_rotate_image")
     crops = []
+    crops_img = []
     for i in range(0,len(positions)):
         x0,x1,y0,y1 = find_x_y_rectangle(positions[i])
         crop_img = img[y0:y1, x0:x1]
@@ -135,7 +136,8 @@ def crop_rotate_image(positions,angles,img,save_img=False):
             if not os.path.exists("output/field_"+str(i)):
                 os.makedirs("output/field_"+str(i))
             cv2.imwrite('output/field_'+str(i)+'/field_'+str(i)+'.png', rotate_img)
-    return crops
+        crops_img.append(rotate_img)
+    return crops, crops_img
 
 def filter_by_team(path_img,parameters_hsv,name,save_img=False):
     img = cv2.imread(path_img)

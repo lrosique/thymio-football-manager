@@ -6,13 +6,9 @@ r = redis.StrictRedis(host='localhost', port=6379, db=0)
 reset = '0'
 
 def calibrate_fields():
-    global reset
-    r.set("reset",reset)
     r.set("calibrate_fields",'1')
 
 def calibrate_image():
-    global reset
-    r.set("reset",reset)
     r.set("calibrate_image",'1')
     
 def start():
@@ -22,6 +18,8 @@ def stop():
     r.set('start','0')
     
 def full_start_server():
+    global reset
+    r.set("reset",reset)
     calibrate_fields()
     time.sleep(3)
     calibrate_image()
