@@ -192,7 +192,7 @@ def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots
         field = {"number":i}
         path_folder = "output/field_"+str(i)
         for j in range(len(hsv)):
-            team_name = hsv[j]["teams"]
+            team_name = hsv[j]["team"]
             name_img = path_folder+"/teams/team_"+team_name+".png"
 
             team_img = filter_by_team(crops_img[i],hsv[j])
