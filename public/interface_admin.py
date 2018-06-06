@@ -2,6 +2,7 @@
 import redis
 import time
 import pickle
+import sys
 r = redis.StrictRedis(host='192.168.1.60', port=6379, db=0)
 reset = '0'
 
@@ -31,3 +32,23 @@ def get_detections(summary=False):
     results = pickle.loads(r.get("results"))
     if summary: return total_results, results
     else: return total_results
+    
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        fct = sys.argv[1]
+        if fct == "field":
+            calibrate_fields()
+        elif fct == "image":
+            calibrate_image()
+        elif fct == "start":
+            start()
+        elif fct == "stop":
+            stop()
+        elif fct == "fstart":
+            full_start_server()
+        elif fct == "get":
+            get_detections(summary=True)
+        else:
+            print("Arguments : field, image, start, stop, fstart, get")
+    else:
+        print("Arguments : field, image, start, stop, fstart, get")
