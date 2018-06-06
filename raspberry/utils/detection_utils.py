@@ -10,16 +10,16 @@ def convert_rgb_to_hsv(r,g,b, delta=5):
     target_color = np.uint8([[[b, g, r]]])
     target_color_hsv = cv2.cvtColor(target_color, cv2.COLOR_BGR2HSV)
     target_color_h = target_color_hsv[0,0,0]
-    
+
     lower_hsv = np.array([max(0, target_color_h - delta), 10, 10])
     upper_hsv = np.array([min(179, target_color_h + delta), 250, 250])
-    
+
     return target_color_h, lower_hsv, upper_hsv
 
 def calibrate_football_fields(img, parameters):
     if img is None:
         raise Exception("[Error] calibrate_football_fields")
-        
+
     positions = []
     angles = []
     if img is None:
@@ -70,7 +70,7 @@ def calibrate_football_fields(img, parameters):
         box = np.int0(box)
         cv2.drawContours(rectangles,[box],0,(0,0,255),2)
         cv2.putText(img,'Terrain '+str(i), (max(0,int(cX)-70),int(cY)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-        
+
         positions.append(box)
         angles.append(rect[2])
 
@@ -94,7 +94,7 @@ def crop_rotate_image(img,positions,angles):
         rows,cols,chan = crop_img.shape
         M = cv2.getRotationMatrix2D((cols/2,rows/2),angles[i]-180,1)
         rotate_img = cv2.warpAffine(crop_img,M,(cols,rows))
-        
+
         fu.save_image(rotate_img,'output/field_'+str(i)+'/field_'+str(i)+'.png')
         crops_img.append(rotate_img)
     return crops, crops_img
@@ -109,7 +109,7 @@ def filter_by_team(img,parameters_hsv):
     img_team = np.zeros_like(img, np.uint8)
     img_team[imask] = img[imask]
     return img_team
-    
+
 def find_thymios(img,parameters,angles,path_folder,team_name):
     details=[]
     src=img.copy()
@@ -125,13 +125,13 @@ def find_thymios(img,parameters,angles,path_folder,team_name):
         # if this is the background label, ignore it
         if label == 0:
             continue
-    
+
         # otherwise, construct the label mask and count the
         # number of pixels
         labelMask = np.zeros(thresh.shape, dtype="uint8")
         labelMask[labels == label] = 255
         numPixels = cv2.countNonZero(labelMask)
-    
+
         # if the number of pixels in the component is sufficiently
         # large, then add it to our mask of "large blobs"
         if numPixels > parameters["number_pixels_per_field"]:
@@ -141,7 +141,7 @@ def find_thymios(img,parameters,angles,path_folder,team_name):
     mask = 255-mask
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
-    
+
     centers=[]
     rectangles = img
     if cnts != None and len(cnts) > 0:
@@ -155,13 +155,13 @@ def find_thymios(img,parameters,angles,path_folder,team_name):
                 box = cv2.boxPoints(rect)
                 box = np.int0(box)
                 cv2.drawContours(rectangles,[box],0,(0,0,255),2)
-                
+
                 mask = np.zeros(src.shape[:2],np.uint8)
                 cv2.drawContours(mask, [c],-1, 255, -1)
                 dst = cv2.bitwise_and(src, src, mask=mask)
                 fu.save_image(th,path_folder+"/details/"+team_name+"_thymio_"+str(cpt)+".png")
                 details.append(dst)
-                
+
                 centers.append([int(cX),int(cY)])
                 cpt += 1
 
@@ -184,21 +184,21 @@ def count_dots_thymio(img, parameters, path_img):
             xcnts.append(cnt)
     return xcnts
 
-def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots_ld,crops_img,save_img=False):
+def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots_ld,crops_img):
     total_results = []
     results = "### RESULTS ###\r\n"
     for i in range(len(crops_img)):
         results +="# Field "+str(i)+" :\r\n"
-        field = {"number":i}   
+        field = {"number":i}
         path_folder = "output/field_"+str(i)
         for j in range(len(hsv)):
             team_name = hsv[j]["teams"]
             name_img = path_folder+"/teams/team_"+team_name+".png"
-            
+
             team_img = filter_by_team(crops_img[i],hsv[j])
             fu.save_image(team_img,name_img)
             centers,details = find_thymios(team_img,parameters_thymio_ld,angles,path_folder, team_name)
-            
+
             results += "** Team "+team_name+"  : "+str(len(centers))+" detections\r\n"
             team=[]
             for k in range(len(centers)):
@@ -207,9 +207,9 @@ def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots
                 numero = len(count_dots_thymio(details[k],parameters_dots_ld,path_img))
                 team.append((numero,center_position))
                 results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
-            
+
             key_team="team_"+team_name
             field[key_team]=team
-                
+
         total_results.append(field)
     return total_results, positions,angles, results
