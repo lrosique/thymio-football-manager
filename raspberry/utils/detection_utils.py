@@ -240,7 +240,56 @@ def find_thymios(path_img, path_thresh, parameters,angles, name, path_folder,sav
     cv2.imwrite(path_folder+'/detections_team_'+name+'.png', rectangles)
     return centers
 
-def analyse_all_fields(angles,positions,hsv_green,hsv_rose,hsv_blue,parameters_thymio_ld,parameters_dots_ld,save_img=False):
+def analyse_all_fields(angles,positions,hsv_green,hsv_rose,hsv_blue,parameters_thymio_ld,parameters_dots_ld,crops_img):
+    total_results = []
+    results = "### RESULTS ###\r\n"
+    for i in range(len(crops_img)):
+        results +="# Field "+str(i)+" :\r\n"
+        field = {"number":i}   
+        path_folder = "output/field_"+str(i)
+        path_img = path_folder+"/field_"+str(i)+".png"
+        create_folder(path_folder+"/teams")
+        create_folder(path_folder+"/details")
+        filter_by_team(path_img,hsv_green,path_folder+"/teams/team_green.png",save_img)
+        filter_by_team(path_img,hsv_rose,path_folder+"/teams/team_rose.png",save_img)
+        filter_by_team(path_img,hsv_blue,path_folder+"/teams/team_blue.png",save_img)
+    
+        centers_green=find_thymios(path_folder+"/teams/team_green.png",path_folder+"/thresh_team_green.png",parameters_thymio_ld,angles,"green",path_folder,save_img)
+        centers_rose=find_thymios(path_folder+"/teams/team_rose.png",path_folder+"/thresh_team_rose.png",parameters_thymio_ld,angles,"rose",path_folder,save_img)
+        centers_blue=find_thymios(path_folder+"/teams/team_blue.png",path_folder+"/thresh_team_blue.png",parameters_thymio_ld,angles,"blue",path_folder,save_img)
+    
+        greens = []
+        roses = []
+        blues = []
+        results += "** Team GREEN  : "+str(len(centers_green))+" detected\r\n"
+        for j in range(len(centers_green)):
+            center_position = centers_green[j]
+            numero = len(count_dots_thymio(path_folder+"/details/green_thymio_"+str(j)+".png",parameters_dots_ld,"green",path_folder,str(j),save_img))
+            greens.append((numero,center_position))
+            results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
+        
+        results+="** Team ROSE : "+str(len(centers_rose))+" detected\r\n"
+        for j in range(len(centers_rose)):
+            center_position = centers_rose[j]
+            numero = len(count_dots_thymio(path_folder+"/details/rose_thymio_"+str(j)+".png",parameters_dots_ld,"rose",path_folder,str(j),save_img))
+            roses.append((numero,center_position))
+            results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
+        
+        results+="** Team BLUE : "+str(len(centers_blue))+" detected\r\n"
+        for j in range(len(centers_blue)):
+            center_position = centers_blue[j]
+            numero = len(count_dots_thymio(path_folder+"/details/blue_thymio_"+str(j)+".png",parameters_dots_ld,"blue",path_folder,str(j),save_img))
+            blues.append((numero,center_position))
+            results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
+        
+        field["team_green"]=greens
+        field["team_rose"]=roses
+        field["team_blue"]=blues
+        total_results.append(field)
+    return total_results, positions,angles, results
+
+
+def analyse_all_fields2(angles,positions,hsv_green,hsv_rose,hsv_blue,parameters_thymio_ld,parameters_dots_ld,save_img):
     total_results = []
     # Generate image
     path_img = "data/image.png"
