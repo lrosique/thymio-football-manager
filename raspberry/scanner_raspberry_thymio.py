@@ -33,12 +33,12 @@ crops_img = None
 def get_calibrate_football_fields(image):
     global positions,crops,angles
     positions,angles = du.calibrate_football_fields(image,p.parameters_fields_ld)
-    crops = du.crop_rotate_image(positions,angles,image)
+    crops = du.crop_rotate_image(image,positions,angles)
     return crops
 
 def get_calibrate_image(image):
     global positions,crops,crops_img,angles
-    crops, crops_img = du.crop_rotate_image(positions,angles,image)
+    crops, crops_img = du.crop_rotate_image(image,positions,angles)
     return crops, crops_img
 
 def get_football_field():
