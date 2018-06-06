@@ -11,3 +11,7 @@ parameters_fields_ld={"canny_min_threshold":150, "canny_max_threshold":300, "thr
 parameters_thymio_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":150, "min_radius":8.5}
 
 parameters_dots_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":5}
+
+parameters_redis={"host":"localhost","port":6379}
+
+save_images = False

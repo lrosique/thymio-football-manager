@@ -6,12 +6,7 @@ import pickle
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 import time
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
-
-du.create_folder("data")
-du.delete_content_folder("output")
-du.delete_file("data/image.png")
-du.delete_file("data/calibration.png")
+r = redis.StrictRedis(host=p.parameters_redis["host"], port=p.parameters_redis["port"], db=0)
 
 r.set("start",'0')
 r.set("calibrate_fields",'0')
