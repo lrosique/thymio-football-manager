@@ -35,11 +35,11 @@ def initiate_save_folders():
     delete_file("data/calibration.png")
 
 def save_image(image,path):
-    if p.save_images and image != None and path != None:
+    if p.save_images and path != None:
         folder = "/".join(map(str,path.split("/")[:-1]))
         if folder != "":
             create_folder(folder)
-        cv2.imwrite(image, path)
+        cv2.imwrite(path, image)
         
 if p.save_images:
     initiate_save_folders()
