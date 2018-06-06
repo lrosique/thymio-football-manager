@@ -2,7 +2,7 @@
 import redis
 import time
 import pickle
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
+r = redis.StrictRedis(host='192.168.1.60', port=6379, db=0)
 reset = '0'
 
 def calibrate_fields():
@@ -10,13 +10,13 @@ def calibrate_fields():
 
 def calibrate_image():
     r.set("calibrate_image",'1')
-    
+
 def start():
     r.set('start','1')
 
 def stop():
     r.set('start','0')
-    
+
 def full_start_server():
     global reset
     r.set("reset",reset)

@@ -12,6 +12,6 @@ parameters_thymio_ld={"threshold_min":100, "threshold_max":255, "number_pixels_p
 
 parameters_dots_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":5}
 
-parameters_redis={"host":"localhost","port":6379}
+parameters_redis={"host":"192.168.1.60","port":6379}
 
 save_images = False
