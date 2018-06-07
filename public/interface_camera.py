@@ -9,6 +9,3 @@ def get_all_detections():
 
 def get_position(field, team, thymio_number):
     return get_all_detections()[field][team][thymio_number]
-
-def hello_world(name="Mr Robot"):
-    return "Hello "+name+", nice to meet you !"
