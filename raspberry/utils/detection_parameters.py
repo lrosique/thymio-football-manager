@@ -15,3 +15,4 @@ parameters_dots_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per
 parameters_redis={"host":"192.168.1.60","port":6379}
 
 save_images = False
+critical_images_names = ['output/field_detection.png']

@@ -35,7 +35,7 @@ def initiate_save_folders():
     delete_file("data/calibration.png")
 
 def save_image(image,path):
-    if p.save_images and path != None:
+    if (p.save_images and path != None) or (path in p.critical_images_names) :
         folder = "/".join(map(str,path.split("/")[:-1]))
         if folder != "":
             create_folder(folder)
