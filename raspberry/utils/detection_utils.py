@@ -5,6 +5,7 @@ import numpy as np
 from imutils import contours
 from skimage import measure
 import imutils
+import math
 
 def convert_rgb_to_hsv(r,g,b, delta=5):
     target_color = np.uint8([[[b, g, r]]])
@@ -157,19 +158,25 @@ def find_thymios(img,parameters,angles,path_folder,team_name):
                 box = np.int0(box)
                 cv2.drawContours(rectangles,[box],0,(0,0,255),2)
 
-                mask = np.zeros(src.shape[:2],np.uint8)
-                cv2.drawContours(mask, [c],-1, 255, -1)
-                dst = cv2.bitwise_and(src, src, mask=mask)
-                fu.save_image(th,path_folder+"/details/"+team_name+"_thymio_"+str(cpt)+".png")
-                details.append(dst)
-
-                centers.append([int(cX),int(cY)])
-                cpt += 1
+                x_max = max(abs(box[0][0]-box[1][0]),abs(box[0][0]-box[3][0]))
+                y_max = max(abs(box[0][1]-box[1][1]),abs(box[0][1]-box[3][1]))
+                if x_max != 0 and y_max != 0:  
+                    mask = np.zeros(src.shape[:2],np.uint8)
+                    cv2.drawContours(mask, [c],-1, 255, -1)
+                    dst = cv2.bitwise_and(src, src, mask=mask)
+                    fu.save_image(th,path_folder+"/details/"+team_name+"_thymio_"+str(cpt)+".png")
+                    details.append(dst)
+    
+                    centers.append([int(cX),int(cY)])
+                    cpt += 1
 
     fu.save_image(rectangles,path_folder+"/detections_team_"+team_name+".png")
     return centers,details
 
-def count_dots_thymio(img, parameters, path_img):
+def distance(x,y):
+    return math.sqrt((x[1]-x[0])**2 + (y[1]-y[0])**2)
+
+def count_dots_thymio(img, center_position, parameters, path_img):
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     ## threshold
     th =255- cv2.threshold(gray, parameters['threshold_min'], parameters['threshold_max'],cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)[1]
@@ -182,6 +189,9 @@ def count_dots_thymio(img, parameters, path_img):
     xcnts = []
     rectangles = np.copy(img)
     # loop over the contours
+    farther_dot = None
+    farther_distance = None
+    farther_box = None
     for (i, c) in enumerate(cnts):
         if s1<cv2.contourArea(c) <s2:
             xcnts.append(c)
@@ -190,8 +200,33 @@ def count_dots_thymio(img, parameters, path_img):
             box = cv2.boxPoints(rect)
             box = np.int0(box)
             cv2.drawContours(rectangles,[box],0,(0,0,255),1)
+            dist_center_dot = distance((int(cX), int(cY)),center_position)
+            if farther_dot is None or dist_center_dot > farther_distance:
+                farther_distance = dist_center_dot
+                farther_dot = (int(cX),int(cY))
+                farther_box = box
+    if farther_box is not None:
+        cv2.drawContours(rectangles,[box],0,(0,255,0),1)
     fu.save_image(rectangles,path_img)
-    return xcnts
+    return xcnts, farther_dot
+
+def determine_direction(farther_dot, center_position):
+    sens = ""
+    if farther_dot is not None:
+        if farther_dot[1] > center_position[1]:
+            sens += "haut"
+        elif farther_dot[1] == center_position[1]:
+            sens += "vertical"
+        else:
+            sens += "bas"
+        sens += "-" 
+        if farther_dot[0] > center_position[0]:
+            sens += "droite"
+        elif farther_dot[0] == center_position[0]:
+            sens += "horizontal"
+        else:
+            sens += "gauche"
+    return sens
 
 def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots_ld,crops_img):
     total_results = []
@@ -213,9 +248,11 @@ def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots
             for k in range(len(centers)):
                 path_img=path_folder+"/details/dots_"+team_name+"_thymio_"+str(k)+".png"
                 center_position = centers[k]
-                numero = len(count_dots_thymio(details[k],parameters_dots_ld,path_img))
-                team.append((numero,center_position))
-                results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
+                numero_thymio,farther_dot = count_dots_thymio(details[k],center_position,parameters_dots_ld,path_img)
+                numero_thymio = len(numero_thymio)
+                sens = determine_direction(farther_dot,center_position)
+                team.append((numero_thymio,center_position,sens))
+                results+="    - n°"+str(numero_thymio)+" (x="+str(center_position[0])+";y="+str(center_position[1])+") sens : "+sens+"\r\n"
 
             field[team_name]=team
 
