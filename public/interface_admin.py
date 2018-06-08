@@ -30,6 +30,8 @@ def full_start_server():
 def get_detections(summary=False):
     total_results = pickle.loads(r.get("total_results"))
     results = pickle.loads(r.get("results"))
+    print(total_results)
+    print(results)
     if summary: return total_results, results
     else: return total_results
     
