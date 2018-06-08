@@ -60,6 +60,8 @@ def calibrate_football_fields(img, parameters):
     # find the contours in the mask, then sort them from left to right
     cnts = cv2.findContours(np.copy(mask), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+    if cnts is None or len(cnts) == 0:
+        raise Exception("Aucun terrain n'a été détecté !")
     cnts = contours.sort_contours(cnts)[0]
 
     # loop over the contours
