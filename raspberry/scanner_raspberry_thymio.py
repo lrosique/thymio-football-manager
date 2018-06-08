@@ -26,9 +26,9 @@ results = None
 crops_img = None
 
 def get_calibrate_football_fields(image):
-    global positions,crops,angles
+    global positions,crops,crops_img,angles
     positions,angles = du.calibrate_football_fields(image,p.parameters_fields_ld)
-    crops = du.crop_rotate_image(image,positions,angles)
+    crops, crops_img = du.crop_rotate_image(image,positions,angles)
     return crops
 
 def get_calibrate_image(image):
@@ -38,7 +38,7 @@ def get_calibrate_image(image):
 
 def get_football_field():
     global total_results,results,angles,positions,crops_img
-    total_results, positions,angles, results = du.analyse_all_fields(angles,positions,[p.hsv_green,p.hsv_rose,p.hsv_blue],p.parameters_thymio_ld,p.parameters_dots_ld,crops_img)
+    total_results, positions,angles, results = du.analyse_all_fields(angles,positions,p.teams_hsv_to_analyse,p.parameters_thymio_ld,p.parameters_dots_ld,crops_img)
     return total_results,results
 
 def init_camera():

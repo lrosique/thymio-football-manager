@@ -2,4 +2,5 @@ output/
 __pycache__/
 utils/__pycache__/
 thymio_python/__pycache__/
-data/
+data/calibration.png
+data/image.png

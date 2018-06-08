@@ -16,3 +16,4 @@ parameters_redis={"host":"localhost","port":6379}
 
 save_images = True
 critical_images_names = ['output/field_detection.png']
+teams_hsv_to_analyse = [hsv_rose,hsv_green,hsv_blue,hsv_ball]

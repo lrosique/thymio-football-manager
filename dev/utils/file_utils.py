@@ -3,8 +3,6 @@ import utils.detection_parameters as p
 import cv2
 import shutil
 import os
-import redis
-r = redis.StrictRedis(host=p.parameters_redis["host"], port=p.parameters_redis["port"], db=0)
 
 def create_folder(path):
     if not os.path.exists(path):

@@ -90,11 +90,12 @@ def crop_rotate_image(img,positions,angles):
         crop_img = img[y0:y1, x0:x1]
         crops.append([x0,x1,y0,y1])
         rows,cols,chan = crop_img.shape
-        M = cv2.getRotationMatrix2D((cols/2,rows/2),angles[i]-180,1)
-        rotate_img = cv2.warpAffine(crop_img,M,(cols,rows))
+        if rows > 0 and cols > 0:
+            M = cv2.getRotationMatrix2D((cols/2,rows/2),angles[i]-180,1)
+            rotate_img = cv2.warpAffine(crop_img,M,(cols,rows))
 
-        fu.save_image(rotate_img,'output/field_'+str(i)+'/field_'+str(i)+'.png')
-        crops_img.append(rotate_img)
+            fu.save_image(rotate_img,'output/field_'+str(i)+'/field_'+str(i)+'.png')
+            crops_img.append(rotate_img)
     return crops, crops_img
 
 def filter_by_team(img,parameters_hsv):
