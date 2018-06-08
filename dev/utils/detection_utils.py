@@ -20,6 +20,7 @@ def calibrate_football_fields(img, parameters):
     if img is None:
         raise Exception("[Error] calibrate_football_fields")
         
+    fu.save_image(img,'data/calibration.png')
     rectangles = np.copy(img)
     positions = []
     angles = []

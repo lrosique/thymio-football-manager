@@ -11,8 +11,6 @@ r = redis.StrictRedis(host=p.parameters_redis["host"], port=p.parameters_redis["
 r.set("start",'0')
 r.set("calibrate_fields",'0')
 r.set("calibrate_image",'0')
-r.set("reset",'0')
-r.set("save_img",'0')
 r.set("crops",pickle.dumps(None))
 r.set("total_results",pickle.dumps(None))
 r.set("results",pickle.dumps(None))
