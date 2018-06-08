@@ -14,18 +14,11 @@ def get_position(field=None, team=None, thymio_number=None):
     if total_results is not None:
         if field < len(total_results):
             if team in total_results[field]:
-                if thymio_number in total_results[field][team]:
-                    return total_results[field][team][thymio_number]
-                else:
-                    print("Numéro",number,"non trouvé dans le résultat")
-            else:
-                print("Team",team,"non trouvée dans le résultat")
-        else:
-            print("Terrain",field,"non trouvé dans le résultat")
-    else:
-        print("Aucun résultat obtenu")
+                for th in total_results[field][team]:
+                    if thymio_number == th[0]:
+                        return th
     return None
-    
+
 def track_position(field=None, team=None, thymio_number=None, duration=0):
     positions = []
     for i in range(0,duration):

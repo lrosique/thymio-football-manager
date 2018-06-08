@@ -6,9 +6,38 @@ from optparse import OptionParser
 proxSensorsVal=[0,0,0,0,0]
 
 
-def motors(motor_right, motor_left):
-    network.SetVariable("thymio-II", "motor.left.target", [motor_left])
-    network.SetVariable("thymio-II", "motor.right.target", [motor_right])
+class Thymio:
+    motor1
+    motor2
+    proxSensorsVal
+
+    def __init__(self, nom='Thymio'):
+        self.nom = nom
+        
+
+
+    def connect(port):
+
+
+
+    def setMotors(motor_left, motor_right):
+        network.SetVariable("thymio-II", "motor.left.target", [motor_left])
+        network.SetVariable("thymio-II", "motor.right.target", [motor_right])
+
+
+
+
+
+t = Thymio()
+t.connect
+t.d
+t.setMotors(...,..)
+t.motorLeft - 3 ""==""
+
+pt.motors(...,...)
+
+
+
 
 def get_proxSensors():
     network.GetVariable("thymio-II", "prox.horizontal",reply_handler=get_variables_reply,error_handler=get_variables_error)
@@ -21,6 +50,14 @@ def get_variables_error(e):
     print('error:')
     print(str(e))
     loop.quit()
+
+print("toot")
+
+def __print--:
+    return "xx"
+
+def --add--:
+
 
 if __name__ == '__main__':
     parser = OptionParser()
