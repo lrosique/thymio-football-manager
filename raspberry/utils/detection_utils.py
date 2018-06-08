@@ -22,8 +22,7 @@ def calibrate_football_fields(img, parameters):
 
     positions = []
     angles = []
-    if img is None:
-        raise Exception("[Error] calibrate_football_fields")
+    rectangles = np.copy(img)
 
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     fu.save_image(gray,'output/gray.png')
@@ -57,19 +56,18 @@ def calibrate_football_fields(img, parameters):
             mask = cv2.add(mask, labelMask)
 
     # find the contours in the mask, then sort them from left to right
-    cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cv2.findContours(np.copy(mask), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
     cnts = contours.sort_contours(cnts)[0]
 
     # loop over the contours
-    rectangles = img
     for (i, c) in enumerate(cnts):
         ((cX, cY), radius) = cv2.minEnclosingCircle(c)
         rect = cv2.minAreaRect(c)
         box = cv2.boxPoints(rect)
         box = np.int0(box)
         cv2.drawContours(rectangles,[box],0,(0,0,255),2)
-        cv2.putText(img,'Terrain '+str(i), (max(0,int(cX)-70),int(cY)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+        cv2.putText(rectangles,'Terrain '+str(i), (max(0,int(cX)-70),int(cY)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
 
         positions.append(box)
         angles.append(rect[2])
@@ -112,7 +110,9 @@ def filter_by_team(img,parameters_hsv):
 
 def find_thymios(img,parameters,angles,path_folder,team_name):
     details=[]
-    src=img.copy()
+    src=np.copy(img)
+    rectangles = np.copy(img)
+    
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     th =255- cv2.threshold(gray, parameters['threshold_min'], parameters['threshold_max'],cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)[1]
     fu.save_image(th,path_folder+"/teams/thresh_team_"+team_name+".png")
@@ -139,18 +139,17 @@ def find_thymios(img,parameters,angles,path_folder,team_name):
 
     # find the contours in the mask, then sort them from left to right
     mask = 255-mask
-    cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cv2.findContours(np.copy(mask), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 
     centers=[]
-    rectangles = img
     if cnts != None and len(cnts) > 0:
         cnts = contours.sort_contours(cnts)[0]
         # loop over the contours
         cpt = 0
         for (i, c) in enumerate(cnts):
             ((cX, cY), radius) = cv2.minEnclosingCircle(c)
-            if radius >= parameters["min_radius"]:
+            if radius >= parameters["min_radius"]  and radius <= parameters["max_radius"] :
                 rect = cv2.minAreaRect(c)
                 box = cv2.boxPoints(rect)
                 box = np.int0(box)
@@ -179,9 +178,17 @@ def count_dots_thymio(img, parameters, path_img):
     s1= 0
     s2 = 20
     xcnts = []
-    for cnt in cnts:
-        if s1<cv2.contourArea(cnt) <s2:
-            xcnts.append(cnt)
+    rectangles = np.copy(img)
+    # loop over the contours
+    for (i, c) in enumerate(cnts):
+        if s1<cv2.contourArea(c) <s2:
+            xcnts.append(c)
+            ((cX, cY), radius) = cv2.minEnclosingCircle(c)
+            rect = cv2.minAreaRect(c)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            cv2.drawContours(rectangles,[box],0,(0,0,255),1)
+    fu.save_image(rectangles,path_img)
     return xcnts
 
 def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots_ld,crops_img):
@@ -202,14 +209,13 @@ def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots
             results += "** Team "+team_name+"  : "+str(len(centers))+" detections\r\n"
             team=[]
             for k in range(len(centers)):
-                path_img=path_folder+"/"+team_name+"_thymio_"+str(k)+".png"
+                path_img=path_folder+"/details/dots_"+team_name+"_thymio_"+str(k)+".png"
                 center_position = centers[k]
                 numero = len(count_dots_thymio(details[k],parameters_dots_ld,path_img))
                 team.append((numero,center_position))
                 results+="    - n°"+str(numero)+" (x="+str(center_position[0])+";y="+str(center_position[1])+")\r\n"
 
-            key_team="team_"+team_name
-            field[key_team]=team
+            field[team_name]=team
 
         total_results.append(field)
     return total_results, positions,angles, results

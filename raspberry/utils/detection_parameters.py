@@ -8,7 +8,7 @@ hsv_ball={"low":(167, 50, 0),"high":(187, 255,255),"team":"ball"}
 
 parameters_fields_ld={"canny_min_threshold":150, "canny_max_threshold":300, "threshold_min":150, "threshold_max":255, "erode_iter":2, "dilate_iter":4, "number_pixels_per_field":5000 }
 
-parameters_thymio_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":150, "min_radius":8.5}
+parameters_thymio_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":150, "min_radius":8.5, "max_radius":14}
 
 parameters_dots_ld={"threshold_min":100, "threshold_max":255, "number_pixels_per_field":5}
 
