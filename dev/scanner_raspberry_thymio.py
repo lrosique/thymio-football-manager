@@ -5,7 +5,7 @@ import shutil
 import cv2
 
 reset = "0"
-name_img_train='capture_15h.png'
+name_img_train='capture_13h.png'
 
 positions = None
 crops = None
@@ -43,7 +43,7 @@ def download_image(name):
 ##
 download_image('calibration')
 img = cv2.imread('data/calibration.png')
-img = img[::-1,...,:]
+#img = img[::-1,...,:]
 
 get_calibrate_football_fields(img)
 

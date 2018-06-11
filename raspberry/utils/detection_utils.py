@@ -95,7 +95,7 @@ def crop_rotate_image(img,positions,angles):
         crops.append([x0,x1,y0,y1])
         rows,cols,chan = crop_img.shape
         if rows > 0 and cols > 0:
-            new_angle = 0 if angles[i] == 0 else angles[i]+90
+            new_angle = angles[i] if angles[i] > -45 else angles[i]+90
             M = cv2.getRotationMatrix2D((cols/2,rows/2),new_angle,1)
             rotate_img = cv2.warpAffine(crop_img,M,(cols,rows))
     
