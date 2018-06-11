@@ -49,3 +49,41 @@ get_calibrate_football_fields(img)
 get_football_field()
 
 ############
+def get_position(field=None, team=None, thymio_number=None):
+    total_results, results = get_football_field()
+    if total_results is not None:
+        if field < len(total_results):
+            if team in total_results[field]:
+                for th in total_results[field][team]:
+                    if thymio_number == th[0]:
+                        return th
+    return None
+
+import time
+def track_position(field=None, team=None, thymio_number=None, duration=0):
+    positions = []
+    delay = 0.5
+    for i in range(0,duration):
+        pos = get_position(field,team,thymio_number)
+        print("t="+str(i*delay)+"s ->",pos)
+        positions.append(pos)
+        time.sleep(delay)
+    return positions
+
+
+get_position(field=0,team="green",thymio_number=2)
+get_position(field=0,team="rose",thymio_number=2)
+
+get_position(field=1,team="green",thymio_number=1)
+get_position(field=1,team="ball",thymio_number=0)
+
+get_position(field=2,team="green",thymio_number=3)
+get_position(field=2,team="rose",thymio_number=3)
+get_position(field=2,team="blue",thymio_number=3)
+
+get_position(field=3,team="blue",thymio_number=1)
+
+get_position(field=4,team="rose",thymio_number=0)
+
+get_position(field=5,team="blue",thymio_number=2)
+get_position(field=5,team="rose",thymio_number=1)
