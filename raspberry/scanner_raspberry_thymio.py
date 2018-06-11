@@ -65,6 +65,7 @@ def loop_camera_redis():
     for frame in camera.capture_continuous(rawCapture, format=p.picamera['format'], use_video_port=True):
         # VARIABLES
         image = frame.array
+        image = image[::-1,...,:]
         print_start_stop(start, r.get("start"))
         start = r.get("start")
         calibrate_fields = r.get("calibrate_fields")
