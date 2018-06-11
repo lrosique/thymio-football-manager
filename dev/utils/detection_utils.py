@@ -95,7 +95,8 @@ def crop_rotate_image(img,positions,angles):
         crops.append([x0,x1,y0,y1])
         rows,cols,chan = crop_img.shape
         if cols > 0 and rows > 0:
-            M = cv2.getRotationMatrix2D((cols/2,rows/2),angles[i]-180,1)
+            new_angle = 0 if angles[i] == 0 else angles[i]+90
+            M = cv2.getRotationMatrix2D((cols/2,rows/2),new_angle,1)
             rotate_img = cv2.warpAffine(crop_img,M,(cols,rows))
     
             fu.save_image(rotate_img,'output/field_'+str(i)+'/field_'+str(i)+'.png')
