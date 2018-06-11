@@ -71,19 +71,23 @@ def track_position(field=None, team=None, thymio_number=None, duration=0):
     return positions
 
 
-get_position(field=0,team="green",thymio_number=2)
-get_position(field=0,team="rose",thymio_number=2)
+validation = []
+validation.append(get_position(field=0,team="green",thymio_number=2) is not None)
+validation.append(get_position(field=0,team="rose",thymio_number=2) is not None)
 
-get_position(field=1,team="green",thymio_number=1)
-get_position(field=1,team="ball",thymio_number=0)
+validation.append(get_position(field=1,team="green",thymio_number=1) is not None)
+validation.append(get_position(field=1,team="ball",thymio_number=0) is not None)
 
-get_position(field=2,team="green",thymio_number=3)
-get_position(field=2,team="rose",thymio_number=3)
-get_position(field=2,team="blue",thymio_number=3)
+validation.append(get_position(field=2,team="green",thymio_number=3) is not None)
+validation.append(get_position(field=2,team="rose",thymio_number=3) is not None)
+validation.append(get_position(field=2,team="blue",thymio_number=3) is not None)
 
-get_position(field=3,team="blue",thymio_number=1)
+validation.append(get_position(field=3,team="blue",thymio_number=1) is not None)
 
-get_position(field=4,team="rose",thymio_number=0)
+validation.append(get_position(field=4,team="rose",thymio_number=0) is not None)
 
-get_position(field=5,team="blue",thymio_number=2)
-get_position(field=5,team="rose",thymio_number=1)
+validation.append(get_position(field=5,team="blue",thymio_number=2) is not None)
+validation.append(get_position(field=5,team="rose",thymio_number=1) is not None)
+    
+print(validation)
+print("score :",str(sum(validation))+"/"+str(len(validation)))
