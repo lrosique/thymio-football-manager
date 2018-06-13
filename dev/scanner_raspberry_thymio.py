@@ -5,7 +5,7 @@ import shutil
 import cv2
 
 reset = "0"
-name_img_train='capture_13h.png'
+name_img_train='dots.png'
 
 positions = None
 crops = None
@@ -28,7 +28,7 @@ def get_calibrate_image(image):
 
 def get_football_field():
     global total_results,results,angles,positions,crops_img
-    total_results, positions,angles, results = du.analyse_all_fields(angles,positions,p.teams_hsv_to_analyse,p.parameters_thymio_ld,p.parameters_dots_ld,crops_img)
+    total_results, positions,angles, results = du.analyse_all_fields(angles,positions,p.teams_hsv_to_analyse,p.parameters_thymio_ld,p.parameters_dots_ld,p.parameters_directions,crops_img)
     return total_results,results
 
 def download_image(name):

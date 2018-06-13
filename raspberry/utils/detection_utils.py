@@ -176,8 +176,8 @@ def find_thymios(img,parameters,angles,path_folder,team_name):
     fu.save_image(rectangles,path_folder+"/detections_team_"+team_name+".png")
     return centers,details
 
-def distance(x,y):
-    return math.sqrt((x[1]-x[0])**2 + (y[1]-y[0])**2)
+def distance(A,B):
+    return math.sqrt((A[0]-B[0])**2 + (A[1]-B[1])**2)
 
 def count_dots_thymio(img, center_position, parameters, path_img):
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -195,6 +195,8 @@ def count_dots_thymio(img, center_position, parameters, path_img):
     farther_dot = None
     farther_distance = None
     farther_box = None
+    positions_dots = []
+    boxes_dots = []
     for (i, c) in enumerate(cnts):
         if s1<cv2.contourArea(c) <s2:
             xcnts.append(c)
@@ -202,36 +204,55 @@ def count_dots_thymio(img, center_position, parameters, path_img):
             rect = cv2.minAreaRect(c)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
+            positions_dots.append((cX,cY))
+            boxes_dots.append(box)
             cv2.drawContours(rectangles,[box],0,(0,0,255),1)
-            dist_center_dot = distance((int(cX), int(cY)),center_position)
+            dist_center_dot = distance((cX, cY),center_position)
             if farther_dot is None or dist_center_dot > farther_distance:
                 farther_distance = dist_center_dot
-                farther_dot = (int(cX),int(cY))
+                farther_dot = (cX,cY)
                 farther_box = box
+    #Cas particulier : s'il y a 3 dots, la détection n'est pas très bonne : on regarde donc quel point est le plus éloigné des autres
+    if len(positions_dots) == 3:
+        p = find_farther_dot(positions_dots)
+        farther_box = boxes_dots[p]
+        farther_dot = positions_dots[p]
     if farther_box is not None:
-        cv2.drawContours(rectangles,[box],0,(0,255,0),1)
+        cv2.drawContours(rectangles,[farther_box],0,(0,255,0),1)
     fu.save_image(rectangles,path_img)
     return xcnts, farther_dot
 
-def determine_direction(farther_dot, center_position):
+def find_farther_dot(positions_dots):
+    min_dist_0 = min(distance(positions_dots[0],positions_dots[1]), distance(positions_dots[0],positions_dots[2]))
+    min_dist_1 = min(distance(positions_dots[1],positions_dots[0]), distance(positions_dots[1],positions_dots[2])) 
+    min_dist_2 = min(distance(positions_dots[2],positions_dots[0]), distance(positions_dots[2],positions_dots[1]))      
+    if min_dist_0 >= min_dist_1 and min_dist_0 >= min_dist_2:
+        return 0
+    if min_dist_1 >= min_dist_0 and min_dist_1 >= min_dist_2:
+        return 1
+    if min_dist_2 >= min_dist_0 and min_dist_2 >= min_dist_0:
+        return 2
+
+def determine_direction(farther_dot, center_position,parameters_directions):
     sens = ""
+    epsilon = parameters_directions["epsilon"]
     if farther_dot is not None:
-        if farther_dot[1] > center_position[1]:
-            sens += "haut"
-        elif farther_dot[1] == center_position[1]:
-            sens += "vertical"
-        else:
+        if farther_dot[1] > center_position[1] + epsilon:   
             sens += "bas"
-        sens += "-" 
-        if farther_dot[0] > center_position[0]:
-            sens += "droite"
-        elif farther_dot[0] == center_position[0]:
-            sens += "horizontal"
+        elif farther_dot[1] < center_position[1] - epsilon:
+            sens += "haut"
         else:
+            sens += "horizontal"
+        sens += "-" 
+        if farther_dot[0] > center_position[0] + epsilon:
+            sens += "droite"
+        elif farther_dot[0] < center_position[0] - epsilon:
             sens += "gauche"
+        else:
+            sens += "vertical"
     return sens
 
-def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots_ld,crops_img):
+def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots_ld,parameters_directions,crops_img):
     total_results = []
     results = "### RESULTS ###\r\n"
     for i in range(len(crops_img)):
@@ -253,7 +274,7 @@ def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots
                 center_position = centers[k]
                 numero_thymio,farther_dot = count_dots_thymio(details[k],center_position,parameters_dots_ld,path_img)
                 numero_thymio = len(numero_thymio)
-                sens = determine_direction(farther_dot,center_position)
+                sens = determine_direction(farther_dot,center_position,parameters_directions)
                 team.append((numero_thymio,center_position,sens))
                 results+="    - n°"+str(numero_thymio)+" (x="+str(center_position[0])+";y="+str(center_position[1])+") sens : "+sens+"\r\n"
 
