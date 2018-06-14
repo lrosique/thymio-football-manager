@@ -288,7 +288,7 @@ def analyse_all_fields(angles,positions,hsv_ball,parameters_ball,hsvs,parameters
         centers,details = find_thymios(ball_img,parameters_ball,angles,path_folder, team_name)
         
         results += "** Team "+team_name+"  : "+str(len(centers))+" detections\r\n"
-        field[team_name]=(0,centers[0]) if len(centers) > 0 else None
+        field[team_name]=[(0,centers[0],'')] if len(centers) > 0 else [(0,None,'')]
 
         total_results.append(field)
     return total_results, positions,angles, results
