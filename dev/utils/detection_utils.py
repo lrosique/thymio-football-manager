@@ -252,18 +252,19 @@ def determine_direction(farther_dot, center_position, parameters_directions):
             sens += "vertical"
     return sens
 
-def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots_ld,parameters_directions,crops_img):
+def analyse_all_fields(angles,positions,hsv_ball,parameters_ball,hsvs,parameters_thymio_ld,parameters_dots_ld,parameters_directions,crops_img):
     total_results = []
     results = "### RESULTS ###\r\n"
     for i in range(len(crops_img)):
         results +="# Field "+str(i)+" :\r\n"
         field = {"number":i}
         path_folder = "output/field_"+str(i)
-        for j in range(len(hsv)):
-            team_name = hsv[j]["team"]
+        #Analyse des teams
+        for j in range(len(hsvs)):
+            team_name = hsvs[j]["team"]
             name_img = path_folder+"/teams/team_"+team_name+".png"
 
-            team_img = filter_by_team(crops_img[i],hsv[j])
+            team_img = filter_by_team(crops_img[i],hsvs[j])
             fu.save_image(team_img,name_img)
             centers,details = find_thymios(team_img,parameters_thymio_ld,angles,path_folder, team_name)
 
@@ -279,6 +280,15 @@ def analyse_all_fields(angles,positions,hsv,parameters_thymio_ld,parameters_dots
                 results+="    - n°"+str(numero_thymio)+" (x="+str(center_position[0])+";y="+str(center_position[1])+") sens : "+sens+"\r\n"
 
             field[team_name]=team
+        #Analyse des balles
+        team_name = hsv_ball["team"]
+        name_img = path_folder+"/teams/team_"+team_name+".png"
+        ball_img = filter_by_team(crops_img[i],hsv_ball)
+        fu.save_image(ball_img,name_img)
+        centers,details = find_thymios(ball_img,parameters_ball,angles,path_folder, team_name)
+        
+        results += "** Team "+team_name+"  : "+str(len(centers))+" detections\r\n"
+        field[team_name]=(0,centers[0]) if len(centers) > 0 else None
 
         total_results.append(field)
     return total_results, positions,angles, results
