@@ -56,7 +56,7 @@ def get_position(field=None, team=None, thymio_number=None):
 
 def get_football_goals():
     global goals_definitions,total_results,goals_definitions
-    goals_definitions = pickle.load(r.get('goals_definitions'))
+    goals_definitions = pickle.loads(r.get('goals_definitions'))
     get_football_field()
     for g in goals_definitions:
         pos = get_position(field=g[0],team=g[1],thymio_number=g[2])
