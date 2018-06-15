@@ -149,6 +149,7 @@ def find_thymios(img,parameters,angles,path_folder,team_name):
     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 
     centers=[]
+    boxes=[]
     if cnts != None and len(cnts) > 0:
         cnts = contours.sort_contours(cnts)[0]
         # loop over the contours
@@ -171,10 +172,11 @@ def find_thymios(img,parameters,angles,path_folder,team_name):
                     details.append(dst)
     
                     centers.append([int(cX),int(cY)])
+                    boxes.append(box)
                     cpt += 1
 
     fu.save_image(rectangles,path_folder+"/detections_team_"+team_name+".png")
-    return centers,details
+    return centers,details,boxes
 
 def distance(A,B):
     return math.sqrt((A[0]-B[0])**2 + (A[1]-B[1])**2)
@@ -266,7 +268,7 @@ def analyse_all_fields(angles,positions,hsv_ball,parameters_ball,hsvs,parameters
 
             team_img = filter_by_team(crops_img[i],hsvs[j])
             fu.save_image(team_img,name_img)
-            centers,details = find_thymios(team_img,parameters_thymio_ld,angles,path_folder, team_name)
+            centers,details,boxes = find_thymios(team_img,parameters_thymio_ld,angles,path_folder, team_name)
 
             results += "** Team "+team_name+"  : "+str(len(centers))+" detections\r\n"
             team=[]
@@ -276,7 +278,7 @@ def analyse_all_fields(angles,positions,hsv_ball,parameters_ball,hsvs,parameters
                 numero_thymio,farther_dot = count_dots_thymio(details[k],center_position,parameters_dots_ld,path_img)
                 numero_thymio = len(numero_thymio)
                 sens = determine_direction(farther_dot,center_position,parameters_directions)
-                team.append((numero_thymio,center_position,sens))
+                team.append((numero_thymio,center_position,sens,boxes[k]))
                 results+="    - n°"+str(numero_thymio)+" (x="+str(center_position[0])+";y="+str(center_position[1])+") sens : "+sens+"\r\n"
 
             field[team_name]=team
@@ -285,7 +287,7 @@ def analyse_all_fields(angles,positions,hsv_ball,parameters_ball,hsvs,parameters
         name_img = path_folder+"/teams/team_"+team_name+".png"
         ball_img = filter_by_team(crops_img[i],hsv_ball)
         fu.save_image(ball_img,name_img)
-        centers,details = find_thymios(ball_img,parameters_ball,angles,path_folder, team_name)
+        centers,details,boxes = find_thymios(ball_img,parameters_ball,angles,path_folder, team_name)
         
         results += "** Team "+team_name+"  : "+str(len(centers))+" detections\r\n"
         field[team_name]=[(0,centers[0],'')] if len(centers) > 0 else [(0,None,'')]

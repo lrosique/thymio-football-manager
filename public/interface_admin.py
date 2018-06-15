@@ -5,7 +5,7 @@ import pickle
 import sys
 r = redis.StrictRedis(host='192.168.1.60', port=6379, db=0)
 reset = '0'
-goals = [(2,"rose",1,"blue")] #(field,goal_color,nb_dots_goal,team_goal)
+goals = [(3,"rose",1,"blue"),(3,"rose",3,"green")] #(field,goal_color,nb_dots_goal,team_goal)
 
 def calibrate_fields():
     r.set("calibrate_fields",'1')
