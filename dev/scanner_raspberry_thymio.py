@@ -14,6 +14,8 @@ total_results = None
 results = None
 
 crops_img = None
+goals_positions = {}
+goals_definitions = [(1,"rose",2,"blue"),(1,"rose",3,"green")]
 
 def get_calibrate_football_fields(image):
     global positions,crops,crops_img,angles
@@ -30,6 +32,17 @@ def get_football_field():
     global total_results,results,angles,positions,crops_img
     total_results, positions,angles, results = du.analyse_all_fields(angles,positions,p.hsv_ball,p.parameters_ball,p.teams_hsv_to_analyse,p.parameters_thymio_ld,p.parameters_dots_ld,p.parameters_directions,crops_img)
     return total_results,results
+
+def get_football_goals():
+    global goals_definitions,total_results,goals_positions
+    get_football_field()
+    for g in goals_definitions:
+        pos = get_position(field=g[0],team=g[1],thymio_number=g[2])
+        if pos is not None and pos[3] is not None:
+            if g[0] not in goals_positions:
+                goals_positions[g[0]] = {}
+            goals_positions[g[0]][g[3]] = pos[3]
+    return goals_positions
 
 def download_image(name):
     global reset

@@ -5,12 +5,18 @@ import pickle
 import sys
 r = redis.StrictRedis(host='192.168.1.60', port=6379, db=0)
 reset = '0'
+goals = [(2,"rose",1,"blue")] #(field,goal_color,nb_dots_goal,team_goal)
 
 def calibrate_fields():
     r.set("calibrate_fields",'1')
 
 def calibrate_image():
     r.set("calibrate_image",'1')
+
+def calibrate_goals():
+    global goals
+    r.set("goals_definitions",pickle.dumps(goals))
+    r.set("calibrate_goals",'1')
 
 def start():
     r.set('start','1')
@@ -24,6 +30,8 @@ def full_start_server():
     calibrate_fields()
     time.sleep(3)
     calibrate_image()
+    time.sleep(3)
+    calibrate_goals()
     time.sleep(3)
     start()
 
@@ -42,6 +50,8 @@ if __name__ == "__main__":
             calibrate_fields()
         elif fct == "image":
             calibrate_image()
+        elif fct == "goal":
+            calibrate_goals()
         elif fct == "start":
             start()
         elif fct == "stop":
@@ -50,7 +60,9 @@ if __name__ == "__main__":
             full_start_server()
         elif fct == "get":
             get_detections(summary=True)
+        elif fct == "help":
+            print("Arguments : field, image, goal, start, stop, fstart, get")
         else:
-            print("Arguments : field, image, start, stop, fstart, get")
+            print("Arguments : field, image, goal, start, stop, fstart, get")
     else:
-        print("Arguments : field, image, start, stop, fstart, get")
+        print("Arguments : field, image, goal, start, stop, fstart, get")
