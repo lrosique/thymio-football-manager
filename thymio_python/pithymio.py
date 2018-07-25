@@ -1,6 +1,7 @@
 import dbus
 import dbus.mainloop.glib
 from gi.repository import GObject
+import time
 
 # sudo apt install python-gi python-gi-cairo python3-gi python3-gi-cairo gir1.2-gtk-3.0
 
@@ -26,7 +27,6 @@ class Thymio:
         self.setMotorLeft(motor_left)
         self.setMotorRight(motor_right)
 
-
     def get_proxSensors(self):
         network.GetVariable("thymio-II", "prox.horizontal",reply_handler=get_variables_reply,error_handler=get_variables_error)
 
@@ -46,6 +46,7 @@ def Braitenberg():
     print(proxSensorsVal[0],proxSensorsVal[1],proxSensorsVal[2],proxSensorsVal[3],proxSensorsVal[4])
     return True
 
+
 if __name__ == '__main__':
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SessionBus()
@@ -53,8 +54,34 @@ if __name__ == '__main__':
     #Create Aseba network
     network = dbus.Interface(bus.get_object('ch.epfl.mobots.Aseba', '/'), dbus_interface='ch.epfl.mobots.AsebaNetwork')
 
+
     thymio = Thymio()
-    thymio.setMotors(100,100)
+
+    def avancer(vitesse,temps):
+        thymio.setMotors(vitesse,vitesse)
+        time.sleep(temps)
+
+    def tournerAngle(angle):
+        if angle<=0:
+            thymio.setMotors(300,-300)
+            time.sleep(abs(angle)/112)
+        if angle>0:
+            thymio.setMotors(-300,300)
+            time.sleep(abs(angle)/112)
+
+    def avancerCourbe(vitessegauche,vitessedroite,temps):
+        thymio.setMotors(vitessegauche,vitessedroite)
+        time.sleep(temps)
+
+    def arret():
+        thymio.setMotors(0,0)
+
+    avancer(300,2)
+    tournerAngle(180)
+    avancerCourbe(1000,1000,2)
+    arret()
+
+
     loop = GObject.MainLoop()
     handle = GObject.timeout_add (1000, Braitenberg)
     loop.run()
