@@ -2,6 +2,72 @@
 
 import tkinter as tk
 import tk_tools
+import dbus
+import dbus.mainloop.glib
+from gi.repository import GObject
+import time
+
+class Thymio:
+    motorLeft=0
+    motorRight=0
+    proxSensorsVal=[0,0,0,0,0]
+
+    def __init__(self, nom='Thymio'):
+        self.nom = nom
+
+    def setMotorLeft(self,motor_left):
+        network.SetVariable("thymio-II", "motor.left.target", [motor_left])
+        self.motorLeft = motor_left
+
+    def setMotorRight(self,motor_right):
+        network.SetVariable("thymio-II", "motor.right.target", [motor_right])
+        self.motorRight = motor_right
+
+    def setMotors(self,motor_left, motor_right):
+        self.setMotorLeft(motor_left)
+        self.setMotorRight(motor_right)
+
+    def get_proxSensors(self):
+        network.GetVariable("thymio-II", "prox.horizontal",reply_handler=get_variables_reply,error_handler=get_variables_error)
+
+def get_variables_reply2(r):
+    global proxSensorsVal
+    proxSensorsVal=r
+    print('rrrrrrrrrrr')
+    print(r)
+    return r
+
+def get_variables_error(e):
+    print('error:')
+    print(str(e))
+    
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+bus = dbus.SessionBus()
+
+#Create Aseba network
+network = dbus.Interface(bus.get_object('ch.epfl.mobots.Aseba', '/'), dbus_interface='ch.epfl.mobots.AsebaNetwork')
+
+
+thymio = Thymio()
+
+def avancer(vitesse,temps):
+	thymio.setMotors(vitesse,vitesse)
+	time.sleep(temps)
+
+def tournerAngle(angle):
+	if angle<=0:
+		thymio.setMotors(300,-300)
+		time.sleep(abs(angle)/112)
+	if angle>0:
+		thymio.setMotors(-300,300)
+		time.sleep(abs(angle)/112)
+
+def avancerCourbe(vitessegauche,vitessedroite,temps):
+	thymio.setMotors(vitessegauche,vitessedroite)
+	time.sleep(temps)
+
+def arret():
+	thymio.setMotors(0,0)
  
 window = tk.Tk()
 window.geometry('800x600')
@@ -34,20 +100,50 @@ btn_right = tk.Button(leftFrame, compound=tk.TOP, width=100, height=100, image=p
 btn_right.grid(column=2, row=6)
 
 
-def on_press(event):
-    print("button was pressed")
+def on_press1(event):
+	global vitesse
+	print("button was pressed")
+	thymio.setMotors(vitesse,vitesse)
 
-def on_release(event):
+def on_release1(event):
+	print("button was released")
+	arret()
+    
+def on_press2(event):
+	global vitesse
+	print("button was pressed")
+	thymio.setMotors(-vitesse,-vitesse)
+
+def on_release2(event):
+	print("button was released")
+	arret()
+    
+def on_press3(event):
+	global vitesse
+	print("button was pressed")
+	thymio.setMotors(-vitesse,vitesse)
+
+def on_release3(event):
+	print("button was released")
+	arret()
+    
+def on_press4(event):
+	global vitesse
+	print("button was pressed")
+	thymio.setMotors(vitesse,-vitesse)
+
+def on_release4(event):
     print("button was released")
+    arret()
 
-btn_up.bind("<ButtonPress>", on_press)
-btn_up.bind("<ButtonRelease>", on_release)
-btn_down.bind("<ButtonPress>", on_press)
-btn_down.bind("<ButtonRelease>", on_release)
-btn_left.bind("<ButtonPress>", on_press)
-btn_left.bind("<ButtonRelease>", on_release)
-btn_right.bind("<ButtonPress>", on_press)
-btn_right.bind("<ButtonRelease>", on_release)
+btn_up.bind("<ButtonPress>", on_press1)
+btn_up.bind("<ButtonRelease>", on_release1)
+btn_down.bind("<ButtonPress>", on_press2)
+btn_down.bind("<ButtonRelease>", on_release2)
+btn_left.bind("<ButtonPress>", on_press3)
+btn_left.bind("<ButtonRelease>", on_release3)
+btn_right.bind("<ButtonPress>", on_press4)
+btn_right.bind("<ButtonRelease>", on_release4)
 
 
 gauge = tk_tools.Gauge(bottomFrame, max_value=20, label='Vitesse', unit='cm/s')
@@ -58,7 +154,8 @@ slider = tk.StringVar()
 slider.set('0.00')
 
 def change_scale(s):
-    global gauge
+    global gauge, vitesse
+    vitesse = 500*float(s)/20
     slider.set('%0.2f' % float(s))
     gauge.set_value(float(s))
     
