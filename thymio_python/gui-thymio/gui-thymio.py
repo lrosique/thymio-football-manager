@@ -19,6 +19,7 @@ r.set("vitesse",10)
 r.set("action","stop")
 r.set("x_joystick",0)
 r.set("y_joystick",0)
+r.set("angle_joystick",None)
 
 root = Tk()
 root.geometry('1920x1080')
@@ -44,7 +45,7 @@ def stay_in_circle(x,y):
     if d > 120 and angle is not None:
         new_x = 120*math.cos(angle)
         new_y = 120*math.sin(angle)
-    return new_x+200,200-new_y
+    return new_x+200,200-new_y, angle
 
 def move(event):
     global x_joystick,y_joystick,canvas_joystick,image_joystick_finale
@@ -53,13 +54,14 @@ def move(event):
     r.set("action","up")
     relative_x = x - 200
     relative_y = 200 - y
-    x,y=stay_in_circle(relative_x,relative_y)
+    x,y,angle=stay_in_circle(relative_x,relative_y)
     canvas_joystick.move(image_joystick_finale, x-x_joystick,y-y_joystick)
     x_joystick = x
     y_joystick = y
     canvas_joystick.update()
     r.set("x_joystick",x-200)
     r.set("y_joystick",200-y)
+    r.set("angle_joystick",angle)
 
 def release(event):
     global x_joystick,y_joystick,canvas_joystick,image_joystick_finale

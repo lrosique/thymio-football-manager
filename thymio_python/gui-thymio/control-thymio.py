@@ -64,9 +64,14 @@ while True:
         r.set("x_joystick",0)
     if r.get("y_joystick") is None:
         r.set("y_joystick",0)
+    if r.get("angle_joystick") is None:
+        r.set("angle_joystick",None)
     vitesse = float(r.get("vitesse").decode("utf-8"))
-    x = int(r.get("x_joystick").decode("utf-8"))
-    y = int(r.get("y_joystick").decode("utf-8"))
+    x = float(r.get("x_joystick").decode("utf-8"))
+    y = float(r.get("y_joystick").decode("utf-8"))
+    angle = r.get("angle_joystick").decode("utf-8")
+    if angle is not None:
+        angle = float(angle)
     action = r.get("action").decode("utf-8")
     if (action == "stop"):
         thymio.setMotors(0,0)
@@ -81,10 +86,20 @@ while True:
     elif (action == "joystick"):
         speed = calculate_speed(x,y)
         if y < 0: speed = - speed
-        percent = (120-x)/120*100
-        if x > 0:
-            thymio.setMotors(percent*speed,speed)
+        
+        if angle < 0: angle = -angle
+        if angle > math.pi/2: angle = angle - math.pi/2
+        percent = 1600/(math.pi**2)*x**2 - 800/math.pi*x + 100
+        
+        v_motor_left = speed
+        v_motor_right = speed
         if x < 0:
-            thymio.setMotors(speed,percent*speed)
+            v_motor_right = percent*v_motor_right
+        else:
+            v_motor_left = percent*v_motor_left
+        if y < 0:
+            v_motor_left = - v_motor_left
+            v_motor_right = - v_motor_right
+        thymio.setMotors(v_motor_left,v_motor_right)
        
     time.sleep(0.1)
