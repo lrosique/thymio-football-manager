@@ -3,6 +3,7 @@ import dbus.mainloop.glib
 from gi.repository import GObject
 import redis
 import time
+import math
 
 r = redis.StrictRedis(host="localhost", port=6379, db=0)
 
@@ -49,10 +50,23 @@ network = dbus.Interface(bus.get_object('ch.epfl.mobots.Aseba', '/'), dbus_inter
 #Variables
 thymio = Thymio()
 
+def calculate_speed(x,y):
+    speed = math.sqrt(x**2 + y**2)*500/120
+    if speed < 0 : speed = 0
+    if speed > 500 : speed = 500
+    print(speed)
+    return speed
+    
 while True:
     if r.get("vitesse") is None:
-        r.set("vitesse",0)
-    vitesse = int(r.get("vitesse").decode("utf-8"))
+        r.set("vitesse",10)
+    if r.get("x_joystick") is None:
+        r.set("x_joystick",0)
+    if r.get("y_joystick") is None:
+        r.set("y_joystick",0)
+    vitesse = float(r.get("vitesse").decode("utf-8"))
+    x = int(r.get("x_joystick").decode("utf-8"))
+    y = int(r.get("y_joystick").decode("utf-8"))
     action = r.get("action").decode("utf-8")
     if (action == "stop"):
         thymio.setMotors(0,0)
@@ -64,4 +78,13 @@ while True:
         thymio.setMotors(-vitesse,vitesse)
     elif (action == "right"):
         thymio.setMotors(vitesse,-vitesse)
+    elif (action == "joystick"):
+        speed = calculate_speed(x,y)
+        if y < 0: speed = - speed
+        percent = (120-x)/120*100
+        if x > 0:
+            thymio.setMotors(percent*speed,speed)
+        if x < 0:
+            thymio.setMotors(speed,percent*speed)
+       
     time.sleep(0.1)

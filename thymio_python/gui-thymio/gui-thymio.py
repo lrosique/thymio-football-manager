@@ -1,73 +1,136 @@
-### GUI ###
-#pip3 install tk_tools
-import tkinter as tk
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jul 27 09:41:02 2018
+
+@author: zgjw1263
+"""
+
+# Python 2
+
+# For Python 3 use:
+from tkinter import *
 import tk_tools
 import redis
+import math
 
 r = redis.StrictRedis(host="localhost", port=6379, db=0)
 
-window = tk.Tk()
-window.geometry('800x600')
-window.title("Commande de contrôle du Thymio-II")
+r.set("vitesse",10)
+r.set("action","stop")
+r.set("x_joystick",0)
+r.set("y_joystick",0)
 
-leftFrame = tk.Frame(window, width=350,height=300)
-leftFrame.grid(row=0, column=0)
+root = Tk()
+root.geometry('1920x1080')
+###############################JOYSTICK##################################
 
-bottomFrame = tk.Frame(window, width=350,height=300)
-bottomFrame.grid(row=2, column=0)
+x_joystick,y_joystick = 200,200
+image_joystick = PhotoImage(file = 'images/button.png')
+image_socle = PhotoImage(file = 'images/canvas.png')
 
-def arrow_button(img_name,row=0,col=0,on_press=None):
-    photo = tk.PhotoImage(file="images/"+img_name)
-    btn = tk.Button(leftFrame, compound=tk.TOP, width=100, height=100, image=photo, bg='#51e886')
-    btn.grid(column=col, row=row)
+canvas_joystick = Canvas(root, width = 400, height = 400, bg="white")
+canvas_joystick.pack(side=RIGHT)
+
+image_socle_finale = canvas_joystick.create_image(x_joystick, y_joystick, image = image_socle)
+image_joystick_finale = canvas_joystick.create_image(x_joystick, y_joystick, image = image_joystick)
+
+def stay_in_circle(x,y):
+    d = math.sqrt(x**2 + y**2)
+    new_x,new_y = x,y
+    if x != 0 and y != 0: angle = math.atan2(y,x)
+    elif x == 0: angle = math.pi / 2 if y > 0 else - math.pi / 2
+    elif y == 0: angle = 0 if x > 0 else math.pi
+    else: angle = None
+    if d > 120 and angle is not None:
+        new_x = 120*math.cos(angle)
+        new_y = 120*math.sin(angle)
+    return new_x+200,200-new_y
+
+def move(event):
+    global x_joystick,y_joystick,canvas_joystick,image_joystick_finale
+    x, y = event.x, event.y
+    r.set("action","joystick")
+    r.set("action","up")
+    relative_x = x - 200
+    relative_y = 200 - y
+    x,y=stay_in_circle(relative_x,relative_y)
+    canvas_joystick.move(image_joystick_finale, x-x_joystick,y-y_joystick)
+    x_joystick = x
+    y_joystick = y
+    canvas_joystick.update()
+    r.set("x_joystick",x-200)
+    r.set("y_joystick",200-y)
+
+def release(event):
+    global x_joystick,y_joystick,canvas_joystick,image_joystick_finale
+    r.set("action","stop")
+    x,y=200,200
+    canvas_joystick.move(image_joystick_finale, x-x_joystick,y-y_joystick)
+    x_joystick = x
+    y_joystick = y
+    canvas_joystick.update()
+
+#move
+canvas_joystick.bind('<B1-Motion>', move)
+#release
+canvas_joystick.bind('<ButtonRelease-1>', release)
+#click
+
+
+###############################CONTROLLER##################################
+canvas_controle = Canvas(root, width = 400, height = 400, bg="white")
+canvas_controle.pack(side=LEFT)
+
+def arrow_button(img_name,position=TOP,row=0,col=0,on_press=None):
+    photo = PhotoImage(file="images/"+img_name)
+    btn = Button(canvas_controle, compound=TOP, width=100, height=100, image=photo, bg='#51e886')
+    btn.pack(side=position)
     btn.bind("<ButtonPress>", on_press)
     btn.bind("<ButtonRelease>", stop)
     btn.image = photo
     return btn
 
 def on_press_up(event):
-    global vitesse, thymio,r
+    global r
     print("UP")
     r.set("action","up")
-    #thymio.setMotors(vitesse,vitesse)
     
 def on_press_down(event):
-    global vitesse, thymio,r
+    global r
     print("DOWN")
     r.set("action","down")
-    #thymio.setMotors(-vitesse,-vitesse)
 
 def on_press_left(event):
-    global vitesse, thymio,r
+    global r
     print("LEFT")
     r.set("action","left")
-    #thymio.setMotors(-vitesse,vitesse)
     
 def on_press_right(event):
-    global vitesse, thymio,r
+    global r
     print("RIGHT")
     r.set("action","right")
-    #thymio.setMotors(vitesse,-vitesse)
 
 def stop(event):
-    global thymio,r
+    global r
     print("STOP")
     r.set("action","stop")
-    #thymio.setMotors(0,0)
 
-btn_up = arrow_button("up_resize.png",row=4,col=1,on_press=on_press_up)
-btn_down = arrow_button("down_resize.png",row=8,col=1,on_press=on_press_down)
-btn_right = arrow_button("right_resize.png",row=6,col=2,on_press=on_press_right)
-btn_left = arrow_button("left_resize.png",row=6,col=0,on_press=on_press_left)
+btn_up = arrow_button("up_resize.png",position=TOP,row=4,col=1,on_press=on_press_up)
+btn_down = arrow_button("down_resize.png",position=BOTTOM,row=8,col=1,on_press=on_press_down)
+btn_right = arrow_button("right_resize.png",position=RIGHT,row=6,col=2,on_press=on_press_right)
+btn_left = arrow_button("left_resize.png",position=LEFT,row=6,col=0,on_press=on_press_left)
 
-gauge = tk_tools.Gauge(bottomFrame, max_value=20, label='Vitesse', unit='cm/s')
-gauge.grid(column=1, row=0)
-gauge.set_value(0)
 
-slider = tk.StringVar()
-slider.set('0.00')
-r.set("vitesse",0)
-r.set("action","stop")
+###############################CONTROLLER##################################
+canvas_speed = Canvas(root, width = 400, height = 400, bg="white")
+canvas_speed.pack(side=BOTTOM)
+
+gauge = tk_tools.Gauge(canvas_speed, max_value=20, label='Vitesse', unit='cm/s')
+gauge.pack(side=TOP)
+gauge.set_value(10)
+
+slider = StringVar()
+slider.set('10.00')
 
 def change_scale(s):
     global gauge, vitesse
@@ -76,6 +139,9 @@ def change_scale(s):
     gauge.set_value(float(s))
     r.set("vitesse",vitesse)
     
-tk.Scale(bottomFrame, from_=0, to_=20, length=320, bd=3, orient=tk.HORIZONTAL, resolution=0.5, command=change_scale).grid(column=0, row=1, columnspan=3)
+speed = Scale(canvas_speed, from_=0, to_=20, length=320, bd=3, orient=HORIZONTAL, resolution=0.5, command=change_scale)
+speed.pack(side=BOTTOM)
 
-window.mainloop()
+
+###############################MAIN##################################
+root.mainloop()
