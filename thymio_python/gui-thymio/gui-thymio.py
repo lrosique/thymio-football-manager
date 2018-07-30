@@ -13,7 +13,7 @@ import tk_tools
 import redis
 import math
 
-r = redis.StrictRedis(host="localhost", port=6379, db=0)
+r = redis.StrictRedis(host="192.168.1.105", port=6379, db=0)
 
 r.set("vitesse",10)
 r.set("action","stop")
@@ -51,7 +51,6 @@ def move(event):
     global x_joystick,y_joystick,canvas_joystick,image_joystick_finale
     x, y = event.x, event.y
     r.set("action","joystick")
-    r.set("action","up")
     relative_x = x - 200
     relative_y = 200 - y
     x,y,angle=stay_in_circle(relative_x,relative_y)

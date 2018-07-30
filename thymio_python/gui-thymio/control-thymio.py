@@ -1,11 +1,11 @@
-import dbus
-import dbus.mainloop.glib
-from gi.repository import GObject
+#import dbus
+#import dbus.mainloop.glib
+#from gi.repository import GObject
 import redis
 import time
 import math
 
-r = redis.StrictRedis(host="localhost", port=6379, db=0)
+r = redis.StrictRedis(host="192.168.1.105", port=6379, db=0)
 
 r.set("action","stop")
 
@@ -18,34 +18,22 @@ class Thymio:
         self.nom = nom
 
     def setMotorLeft(self,motor_left):
-        network.SetVariable("thymio-II", "motor.left.target", [motor_left])
+        #network.SetVariable("thymio-II", "motor.left.target", [motor_left])
         self.motorLeft = motor_left
 
     def setMotorRight(self,motor_right):
-        network.SetVariable("thymio-II", "motor.right.target", [motor_right])
+        #network.SetVariable("thymio-II", "motor.right.target", [motor_right])
         self.motorRight = motor_right
 
     def setMotors(self,motor_left, motor_right):
         self.setMotorLeft(motor_left)
         self.setMotorRight(motor_right)
-
-    #def get_proxSensors(self):
-    #    network.GetVariable("thymio-II", "prox.horizontal",reply_handler=get_variables_reply2,error_handler=get_variables_error)
-
-#def get_variables_reply2(r):
-#    global proxSensorsVal
-#    proxSensorsVal=r
-#    return r
-
-#def get_variables_error(e):
-#    print(str(e))
-    
     
 ### OPENING BUS ###
-dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-bus = dbus.SessionBus()
+#dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+#bus = dbus.SessionBus()
 # ASEBA NETWORK #
-network = dbus.Interface(bus.get_object('ch.epfl.mobots.Aseba', '/'), dbus_interface='ch.epfl.mobots.AsebaNetwork')
+#network = dbus.Interface(bus.get_object('ch.epfl.mobots.Aseba', '/'), dbus_interface='ch.epfl.mobots.AsebaNetwork')
 
 #Variables
 thymio = Thymio()
@@ -72,6 +60,7 @@ while True:
     if angle is not None and angle != "None":
         angle = float(angle)
     action = r.get("action").decode("utf-8")
+    print("ACTION = ",action)
     if (action == "stop"):
         thymio.setMotors(0,0)
     elif (action == "up"):
