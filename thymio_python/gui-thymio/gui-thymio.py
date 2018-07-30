@@ -141,7 +141,8 @@ def change_scale(s):
     gauge.set_value(float(s))
     r.set("vitesse",vitesse)
     
-speed = Scale(canvas_speed, from_=0, to_=20, length=320, bd=3, orient=HORIZONTAL, resolution=0.5, command=change_scale)
+speed = Scale(canvas_speed, from_=0, to_=20, length=320, bd=3, orient=HORIZONTAL, resolution=1, command=change_scale)
+speed.set(10)
 speed.pack(side=BOTTOM)
 
 

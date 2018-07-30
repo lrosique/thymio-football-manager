@@ -54,7 +54,6 @@ def calculate_speed(x,y):
     speed = math.sqrt(x**2 + y**2)*500/120
     if speed < 0 : speed = 0
     if speed > 500 : speed = 500
-    print(speed)
     return speed
     
 while True:
@@ -70,7 +69,7 @@ while True:
     x = float(r.get("x_joystick").decode("utf-8"))
     y = float(r.get("y_joystick").decode("utf-8"))
     angle = r.get("angle_joystick").decode("utf-8")
-    if angle is not None:
+    if angle is not None and angle != "None":
         angle = float(angle)
     action = r.get("action").decode("utf-8")
     if (action == "stop"):
@@ -83,13 +82,13 @@ while True:
         thymio.setMotors(-vitesse,vitesse)
     elif (action == "right"):
         thymio.setMotors(vitesse,-vitesse)
-    elif (action == "joystick"):
+    elif (action == "joystick" and angle is not None and angle != "None"):
         speed = calculate_speed(x,y)
         if y < 0: speed = - speed
         
         if angle < 0: angle = -angle
         if angle > math.pi/2: angle = angle - math.pi/2
-        percent = 1600/(math.pi**2)*x**2 - 800/math.pi*x + 100
+        percent = 1600/(math.pi**2)*(x**2) - 800/math.pi*x + 100
         
         v_motor_left = speed
         v_motor_right = speed
