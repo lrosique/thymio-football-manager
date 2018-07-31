@@ -61,6 +61,7 @@ def move(event):
     r.set("x_joystick",x-200)
     r.set("y_joystick",200-y)
     r.set("angle_joystick",angle)
+    print("x",(x-200),"y",(200-y),"angle",angle)
 
 def release(event):
     global x_joystick,y_joystick,canvas_joystick,image_joystick_finale

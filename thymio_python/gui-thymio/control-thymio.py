@@ -43,7 +43,9 @@ def calculate_speed(x,y):
     if speed < 0 : speed = 0
     if speed > 500 : speed = 500
     return speed
-    
+
+def sign(x): return 1 if x >= 0 else -1  
+
 while True:
     if r.get("vitesse") is None:
         r.set("vitesse",10)
@@ -72,21 +74,26 @@ while True:
     elif (action == "right"):
         thymio.setMotors(vitesse,-vitesse)
     elif (action == "joystick" and angle is not None and angle != "None"):
-        speed = calculate_speed(x,y)
+        speed = sign(y)*calculate_speed(x,y)
         print("x",x,"y",y)
-        if y < 0: speed = - speed
-        
-        if angle < 0: angle = -angle
-        if angle > math.pi/2: angle = angle - math.pi/2
-        percent = (1600/(math.pi**2)*(angle**2) - 800/math.pi*angle + 100)/100
-        print("percent:",percent)
-        
         v_motor_left = speed
         v_motor_right = speed
-        if x < 0:
-            v_motor_right = percent*v_motor_right
+        
+        if -30 < y < 30:
+            v_motor_left = sign(x)*v_motor_left
+            v_motor_right = - sign(x)*v_motor_right
         else:
-            v_motor_left = percent*v_motor_left
+            if angle < 0: angle = -angle
+            if angle > math.pi/2: angle = math.pi - angle
+            
+            a = 100/(math.pi/2 - 0.255)
+            b = - 0.255*a
+            percent = (a*angle+b)/100
+            print("percent:",percent)
+            if x < 0:
+                v_motor_left = percent*v_motor_left
+            else:
+                v_motor_right = percent*v_motor_right
         print("left:",v_motor_left,"right",v_motor_right)
         thymio.setMotors(v_motor_left,v_motor_right)
        
